@@ -1,3 +1,5 @@
+import sys, os
+sys.path.append(os.pardir)
 import numpy as np
 import datetime
 import pickle
@@ -43,19 +45,25 @@ class BasicNet:
 
             for itr in range(iteration_per_epoch):
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+
                 if itr % 10 == 0:
                     loss = self.loss(train_images, train_labels)
                     print("Loss in Iteration {}: {}".format(itr, loss))
+
+                if itr % 100 == 0:
+                    pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
+                    pickle.dump(self.params, open(pickle_filename, "wb"))
+                    print("Saved params at {}".format(pickle_filename))
 
                 batch_mask = np.random.choice(train_size, batch_size)
                 batch_images = train_images[batch_mask]
                 batch_labels = train_labels[batch_mask]
                 self.gradient_descent(batch_images, batch_labels)
 
-            if itr % 10 == 0:
-                pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-                pickle.dump(self.params, open(pickle_filename, "wb"))
-                print("Saved params at {}".format(pickle_filename))
+        pickle_filename = "params_after_{}_epochs.pkl".format(epochs)
+        pickle.dump(self.params, open(pickle_filename, "wb"))
+        print("Saved params at {}".format(pickle_filename))
+
 
 
     def gradient_descent(self, X, T):
@@ -113,6 +121,7 @@ if __name__ == '__main__':
     # batch_labels = train_labels[:100]
     # grad = basic_net.gradients(batch_images, batch_labels)
 
-    basic_net.train(train_images, train_labels, epochs=1)
+    basic_net.train(train_images, train_labels, epochs=5)
+    print("Done!")
 
 
