@@ -13,8 +13,8 @@ def softmax(X):
         sum = np.sum(exp, axis=1, keepdims=True)
         return exp / sum
 
-
-
+def cross_entropy(Y, T):
+    return np.mean(np.sum(-np.log(Y) * T, axis=1))
 
 
 if __name__ == '__main__':
@@ -29,5 +29,12 @@ if __name__ == '__main__':
         [-0.5, 0.1, 0.3, 1],
         [3.0, 8.0, 0.4, 3.0]
     ])
-    print(softmax(one_dim))
-    print(softmax(two_dim))
+    # print(softmax(one_dim))
+    # print(softmax(two_dim))
+
+    logits = softmax(two_dim)
+    labels = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0]
+    ])
+    print(cross_entropy(logits, labels))
