@@ -1,4 +1,6 @@
 import numpy as np
+import datetime
+import pickle
 from lib.MNIST import MNIST
 from lib.functions import sigmoid, softmax, cross_entropy
 
@@ -30,6 +32,47 @@ class BasicNet:
 
         return loss
 
+    def train(self, train_images, train_labels, epochs=5):
+        train_size = train_images.shape[0]
+        batch_size = 100
+        iteration_per_epoch = train_size // batch_size
+        total_iterations = iteration_per_epoch * epochs
+
+        for epoch in range(epochs):
+            print("========== Epoch {} ==========".format(epoch))
+
+            for itr in range(iteration_per_epoch):
+                print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+                if itr % 10 == 0:
+                    loss = self.loss(train_images, train_labels)
+                    print("Loss in Iteration {}: {}".format(itr, loss))
+
+                batch_mask = np.random.choice(train_size, batch_size)
+                batch_images = train_images[batch_mask]
+                batch_labels = train_labels[batch_mask]
+                self.gradient_descent(batch_images, batch_labels)
+
+            if itr % 10 == 0:
+                pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
+                pickle.dump(self.params, open(pickle_filename, "wb"))
+                print("Saved params at {}".format(pickle_filename))
+
+
+    def gradient_descent(self, X, T):
+        ETA = 0.001
+        grads = basic_net.gradients(X, T)
+        for param_name in ['W1', 'b1', 'W2', 'b2']:
+            self.params[param_name] -= ETA * grads[param_name]
+
+    def gradients(self, X, T):
+        loss = lambda: self.loss(X, T)
+
+        gradients = {}
+        for param_name in ['W1', 'b1', 'W2', 'b2']:
+            gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
+
+        return gradients
+
     def numerical_gradient(self, loss, variables):
         h = 1e-4
         gradients = np.zeros_like(variables)
@@ -51,15 +94,6 @@ class BasicNet:
             itr.iternext()
 
         return gradients
-    
-    def gradients(self, X, T):
-        loss = lambda: self.loss(X, T)
-        
-        gradients = {}
-        for param_name in ['W1', 'b1', 'W2', 'b2']:
-            gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
-
-        return gradients
 
 
 if __name__ == '__main__':
@@ -75,8 +109,10 @@ if __name__ == '__main__':
     # loss = basic_net.loss(test_images[:5], test_labels[:5])
     # print(loss)
 
-    batch_images = train_images[:100]
-    batch_labels = train_labels[:100]
-    grad = basic_net.gradients(batch_images, batch_labels)
+    # batch_images = train_images[:100]
+    # batch_labels = train_labels[:100]
+    # grad = basic_net.gradients(batch_images, batch_labels)
+
+    basic_net.train(train_images, train_labels, epochs=1)
 
 
