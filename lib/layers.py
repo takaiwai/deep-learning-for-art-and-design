@@ -51,10 +51,42 @@ class DenseLayer():
 
 
 class SigmoidLayer():
-    pass
+    def __init__(self):
+        self.A = None
+
+    def forward(self, Z):
+        self.A = sigmoid(Z)
+        return self.A
+
+    def backward(self, dA):
+        dZ = dA * (1 - self.A) * self.A
+        return dZ
 
 class SoftmaxCrossEntropyLayer():
-    pass
+    def __init__(self):
+        self.Y = None
+        self.T = None
+        self.loss = None
+
+    def forward(self, Z, T):
+        self.Y = softmax(Z)
+        self.T = T
+        self.loss = cross_entropy(self.Y, T)
+
+        print("Y")
+        print(self.Y)
+        print("T")
+        print(T)
+        print("loss")
+        print(self.loss)
+
+        return self.loss
+
+    def backward(self, dL=1.0):
+        dZ = (self.Y - self.T)
+        print("dZ")
+        print(dZ)
+        return dZ
 
 
 if __name__ == '__main__':
@@ -72,11 +104,19 @@ if __name__ == '__main__':
     ])
     b = np.array([0.5, 1.0, 0.7])
 
-    dense = DenseLayer(P, b)
-    price_matrix = dense.forward(C)
-    print(price_matrix)
-    print(np.sum(price_matrix))
-    dC = dense.backward(np.ones((4, 3)))
-    print(dC)
-    print(dense.dW)
-    print(dense.db)
+    # dense = DenseLayer(P, b)
+    # price_matrix = dense.forward(C)
+    # print(price_matrix)
+    # print(np.sum(price_matrix))
+    # dC = dense.backward(np.ones((4, 3)))
+    # print(dC)
+    # print(dense.dW)
+    # print(dense.db)
+
+    # sigmoid_layer = SigmoidLayer()
+    # activation = sigmoid_layer.forward(P)
+    # print("Activation")
+    # print(activation)
+    # dA = sigmoid_layer.backward(np.ones((2, 3)))
+    # print("dA")
+    # print(dA)
