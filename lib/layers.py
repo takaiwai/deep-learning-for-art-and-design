@@ -73,19 +73,22 @@ class SoftmaxCrossEntropyLayer():
         self.T = T
         self.loss = cross_entropy(self.Y, T)
 
-        print("Y")
-        print(self.Y)
-        print("T")
-        print(T)
-        print("loss")
-        print(self.loss)
+        # print("Y")
+        # print(self.Y)
+        # print("T")
+        # print(T)
+        # print("loss")
+        # print(self.loss)
 
         return self.loss
 
     def backward(self, dL=1.0):
-        dZ = (self.Y - self.T)
-        print("dZ")
-        print(dZ)
+        batch_size = self.Y.shape[0]
+
+        # dZ = (self.Y - self.T) * dL / batch_size
+        dZ = (self.Y - self.T) / batch_size
+        # print("dZ")
+        # print(dZ)
         return dZ
 
 
@@ -120,3 +123,28 @@ if __name__ == '__main__':
     # dA = sigmoid_layer.backward(np.ones((2, 3)))
     # print("dA")
     # print(dA)
+
+    L = np.array([
+        [0, 0, 1],
+        [0, 1, 0]
+    ])
+
+    softmax_cross_entropy_layer = SoftmaxCrossEntropyLayer()
+    loss = softmax_cross_entropy_layer.forward(P, L)
+    dZ = softmax_cross_entropy_layer.backward()
+
+    print("other example")
+
+    P2 = np.array([
+        [1.5, 1.0, 2.0],
+        [3.0, 2.0, 4.0],
+        [-3.0, 1.0, -0.6]
+    ])
+    L2 = np.array([
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 0]
+    ])
+    softmax_cross_entropy_layer = SoftmaxCrossEntropyLayer()
+    loss = softmax_cross_entropy_layer.forward(P2, L2)
+    dZ = softmax_cross_entropy_layer.backward()
