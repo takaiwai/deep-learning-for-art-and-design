@@ -64,10 +64,8 @@ class BasicNet:
         pickle.dump(self.params, open(pickle_filename, "wb"))
         print("Saved params at {}".format(pickle_filename))
 
-
-
     def gradient_descent(self, X, T):
-        ETA = 0.001
+        ETA = 0.1
         grads = basic_net.gradients(X, T)
         for param_name in ['W1', 'b1', 'W2', 'b2']:
             self.params[param_name] -= ETA * grads[param_name]
@@ -123,5 +121,4 @@ if __name__ == '__main__':
 
     basic_net.train(train_images, train_labels, epochs=5)
     print("Done!")
-
 
