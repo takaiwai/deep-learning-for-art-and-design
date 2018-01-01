@@ -136,6 +136,8 @@ class FastBasicNet:
 if __name__ == '__main__':
     print("this is main")
 
+    np.random.seed(1229)
+
     fast_basic_net = FastBasicNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
 
@@ -168,11 +170,15 @@ if __name__ == '__main__':
         print("========== Epoch {} ==========".format(epoch))
 
         for _ in range(iteration_per_epoch):
+            batch_mask = np.random.choice(train_size, batch_size)
+            batch_images = train_images[batch_mask]
+            batch_labels = train_labels[batch_mask]
+
             if itr % 100 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr % 300 == 0:
-                train_loss = fast_basic_net.loss(train_images, train_labels)
+            if itr % 100 == 0:
+                train_loss = fast_basic_net.loss(batch_images, batch_labels)
                 test_loss = fast_basic_net.loss(test_images, test_labels)
                 print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
                 log['loss_train'].append(train_loss)
@@ -180,8 +186,8 @@ if __name__ == '__main__':
                 log['loss_test'].append(test_loss)
                 log['loss_test_itr'].append(itr)
 
-            if itr % 300 == 0:
-                train_acc = fast_basic_net.accuracy(train_images, train_labels)
+            if itr % 100 == 0:
+                train_acc = fast_basic_net.accuracy(batch_images, batch_labels)
                 test_acc = fast_basic_net.accuracy(test_images, test_labels)
                 print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
                 log['accuracy_train'].append(train_acc)
@@ -193,9 +199,6 @@ if __name__ == '__main__':
             #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
             #     fast_basic_net.save_params(pickle_filename)
 
-            batch_mask = np.random.choice(train_size, batch_size)
-            batch_images = train_images[batch_mask]
-            batch_labels = train_labels[batch_mask]
             fast_basic_net.gradient_descent(batch_images, batch_labels)
 
             itr += 1
@@ -203,7 +206,7 @@ if __name__ == '__main__':
     print("Done!")
     # ==== End Training
 
-    print(log)
+    # print(log)
     pickle.dump(log, open('log.pkl', "wb"))
 
 
