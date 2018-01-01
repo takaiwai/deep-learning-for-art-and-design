@@ -123,6 +123,26 @@ class FastBasicNet:
 
         return gradients
 
+    def gradient_check(self, images, labels):
+        print("Checking gradients...")
+        THRESHOLD = 1e-5
+        backprop_grad = self.gradients(images, labels)
+        numerical_grad = self.numerical_gradients(images, labels)
+
+        for key in backprop_grad.keys():
+            b = backprop_grad[key].reshape(-1)
+            n = numerical_grad[key].reshape(-1)
+
+            diff = np.linalg.norm(b - n)
+            prop = np.linalg.norm(b) + np.linalg.norm(n)
+            check = diff / prop
+            if check < THRESHOLD:
+                result = 'OK'
+            else:
+                result = 'NG'
+
+            print("gradient {}: {} ({})".format(key, result, check))
+
 
 if __name__ == '__main__':
     print("this is main")
@@ -131,39 +151,9 @@ if __name__ == '__main__':
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
 
-    # prediction = fast_basic_net.predict(test_images[:5])
-    # print(prediction)
-    #
-    # loss = fast_basic_net.loss(test_images[:5], test_labels[:5])
-    # print(loss)
+    batch_images = train_images[100:200]
+    batch_labels = train_labels[100:200]
+    fast_basic_net.gradient_check(batch_images, batch_labels)
 
-    # batch_images = train_images[:100]
-    # batch_labels = train_labels[:100]
-    # backprop_grad = fast_basic_net.gradients(batch_images, batch_labels)
-    # print('======== Backprop ======')
-    # print(backprop_grad)
-
-    # numerical_grad = fast_basic_net.numerical_gradients(batch_images, batch_labels)
-    # print('======== Numerical ======')
-    # print(numerical_grad)
-
-    # for key in backprop_grad.keys():
-    #     b = backprop_grad[key].reshape(-1)
-    #     n = numerical_grad[key].reshape(-1)
-    #
-    #     # diff = np.abs(backprop_grad[key] - numerical_grad[key])
-    #     # prop = np.max
-    #     # print(key + ":" + str(diff))
-    #     # print(b.shape)
-    #     # print(n.shape)
-    #     diff = np.linalg.norm(b - n)
-    #     prop = np.linalg.norm(b) + np.linalg.norm(n)
-    #     # print('diff')
-    #     # print(diff)
-    #     # print('prop: ', prop)
-    #     check = diff / prop
-    #     print("gradient {}: {}".format(key, check))
-
-    fast_basic_net.train(train_images, train_labels, epochs=5)
-    print("Done!")
-
+    # fast_basic_net.train(train_images, train_labels, epochs=5)
+    # print("Done!")
