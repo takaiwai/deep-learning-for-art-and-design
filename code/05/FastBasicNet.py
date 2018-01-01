@@ -58,41 +58,6 @@ class FastBasicNet:
         T_index = np.argmax(T, axis=1)
         return np.mean(Z_index == T_index)
 
-    def train(self, train_images, train_labels, test_images, test_labels, epochs=5):
-        train_size = train_images.shape[0]
-        batch_size = 100
-        iteration_per_epoch = train_size // batch_size
-        total_iterations = iteration_per_epoch * epochs
-
-        itr = 0
-        for epoch in range(epochs):
-            print("========== Epoch {} ==========".format(epoch))
-
-            for _ in range(iteration_per_epoch):
-                if itr % 100 == 0:
-                    print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
-
-                if itr % 300 == 0:
-                    train_loss = self.loss(train_images, train_labels)
-                    test_loss = self.loss(test_images, test_labels)
-                    print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
-
-                if itr % 300 == 0:
-                    train_acc = self.accuracy(train_images, train_labels)
-                    test_acc = self.accuracy(test_images, test_labels)
-                    print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
-
-                # if itr % 100 == 0:
-                #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-                #     self.save_params(pickle_filename)
-
-                batch_mask = np.random.choice(train_size, batch_size)
-                batch_images = train_images[batch_mask]
-                batch_labels = train_labels[batch_mask]
-                self.gradient_descent(batch_images, batch_labels)
-
-                itr += 1
-
     def gradient_descent(self, X, T):
         ETA = 0.1
         grads = fast_basic_net.gradients(X, T)
@@ -170,7 +135,9 @@ class FastBasicNet:
 
 if __name__ == '__main__':
     print("this is main")
+
     fast_basic_net = FastBasicNet()
+    # fast_basic_net.load_params('params_after_5_epochs.pkl')
 
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
@@ -178,15 +145,45 @@ if __name__ == '__main__':
     # batch_images = train_images[:20]
     # batch_labels = train_labels[:20]
 
-    fast_basic_net.train(train_images, train_labels, test_images, test_labels, epochs=5)
+    # ==== Training
+    epochs = 5
+    train_size = train_images.shape[0]
+    batch_size = 100
+    iteration_per_epoch = train_size // batch_size
+    total_iterations = iteration_per_epoch * epochs
+
+    itr = 0
+    for epoch in range(epochs):
+        print("========== Epoch {} ==========".format(epoch))
+
+        for _ in range(iteration_per_epoch):
+            if itr % 100 == 0:
+                print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+
+            if itr % 300 == 0:
+                train_loss = fast_basic_net.loss(train_images, train_labels)
+                test_loss = fast_basic_net.loss(test_images, test_labels)
+                print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
+
+            if itr % 300 == 0:
+                train_acc = fast_basic_net.accuracy(train_images, train_labels)
+                test_acc = fast_basic_net.accuracy(test_images, test_labels)
+                print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
+
+            # if itr % 100 == 0:
+            #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
+            #     fast_basic_net.save_params(pickle_filename)
+
+            batch_mask = np.random.choice(train_size, batch_size)
+            batch_images = train_images[batch_mask]
+            batch_labels = train_labels[batch_mask]
+            fast_basic_net.gradient_descent(batch_images, batch_labels)
+
+            itr += 1
+
     print("Done!")
+    # ==== End Training
 
-    # fast_basic_net.load_params('params_after_5_epochs.pkl')
-
-    # fast_basic_net.accuracy(batch_images, batch_labels)
-
-    # acc = fast_basic_net.accuracy(test_images, test_labels)
-    # print(acc)
 
     train_loss = fast_basic_net.loss(train_images, train_labels)
     test_loss = fast_basic_net.loss(test_images, test_labels)
