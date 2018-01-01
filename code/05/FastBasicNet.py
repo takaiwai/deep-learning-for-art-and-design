@@ -82,7 +82,6 @@ class FastBasicNet:
         dL = self.last_layer.backward()
         layers = list(self.layers.values())
         layers.reverse()
-        print("layers:", layers)
         for layer in layers:
             dL = layer.backward(dL)
 
@@ -141,8 +140,30 @@ if __name__ == '__main__':
 
     batch_images = train_images[:100]
     batch_labels = train_labels[:100]
-    grad = fast_basic_net.gradients(batch_images, batch_labels)
-    print(grad)
+    backprop_grad = fast_basic_net.gradients(batch_images, batch_labels)
+    # print('======== Backprop ======')
+    # print(backprop_grad)
+
+    numerical_grad = fast_basic_net.numerical_gradients(batch_images, batch_labels)
+    # print('======== Numerical ======')
+    # print(numerical_grad)
+
+    for key in backprop_grad.keys():
+        b = backprop_grad[key].reshape(-1)
+        n = numerical_grad[key].reshape(-1)
+
+        # diff = np.abs(backprop_grad[key] - numerical_grad[key])
+        # prop = np.max
+        # print(key + ":" + str(diff))
+        # print(b.shape)
+        # print(n.shape)
+        diff = np.linalg.norm(b - n)
+        prop = np.linalg.norm(b) + np.linalg.norm(n)
+        # print('diff')
+        # print(diff)
+        # print('prop: ', prop)
+        check = diff / prop
+        print("gradient {}: {}".format(key, check))
 
     # fast_basic_net.train(train_images, train_labels, epochs=5)
     # print("Done!")
