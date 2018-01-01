@@ -9,21 +9,37 @@ from collections import OrderedDict
 
 class FastBasicNet:
     def __init__(self):
-        print("Created FastBasicNet instance")
+        self.params = None
+        self.layers = None
 
+        self.init_params()
+        self.init_layers()
+
+    def init_params(self):
         SIGMA = 0.01
+
         self.params = {}
         self.params['W1'] = np.random.randn(28*28, 32) * SIGMA
         self.params['b1'] = np.random.rand(32) * SIGMA
         self.params['W2'] = np.random.randn(32, 10) * SIGMA
         self.params['b2'] = np.random.rand(10) * SIGMA
 
+    def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
         self.layers['Sigmoid1'] = SigmoidLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
+    def save_params(self, filename):
+        pickle.dump(self.params, open(filename, "wb"))
+        print("Saved params at {}".format(filename))
+
+    def load_params(self, filename):
+        self.params = pickle.load(open(filename, "rb"))
+        print("Loaded params from {}".format(filename))
+        self.init_layers()
+        print("Recreated layers with the params")
 
     def predict(self, X):
         out = X
@@ -56,18 +72,12 @@ class FastBasicNet:
 
                 if itr % 100 == 0:
                     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-                    pickle.dump(self.params, open(pickle_filename, "wb"))
-                    print("Saved params at {}".format(pickle_filename))
+                    self.save_params(pickle_filename)
 
                 batch_mask = np.random.choice(train_size, batch_size)
                 batch_images = train_images[batch_mask]
                 batch_labels = train_labels[batch_mask]
                 self.gradient_descent(batch_images, batch_labels)
-
-        pickle_filename = "params_after_{}_epochs.pkl".format(epochs)
-        pickle.dump(self.params, open(pickle_filename, "wb"))
-        print("Saved params at {}".format(pickle_filename))
-
 
     def gradient_descent(self, X, T):
         ETA = 0.1
@@ -153,7 +163,11 @@ if __name__ == '__main__':
 
     batch_images = train_images[100:200]
     batch_labels = train_labels[100:200]
-    fast_basic_net.gradient_check(batch_images, batch_labels)
+    # fast_basic_net.gradient_check(batch_images, batch_labels)
 
     # fast_basic_net.train(train_images, train_labels, epochs=5)
     # print("Done!")
+
+    fast_basic_net.load_params('params_after_5_epochs.pkl')
+    loss = fast_basic_net.loss(batch_images, batch_labels)
+    print(loss)
