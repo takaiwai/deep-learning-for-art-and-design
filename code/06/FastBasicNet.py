@@ -19,16 +19,20 @@ class FastBasicNet:
         SIGMA = 0.01
 
         self.params = {}
-        self.params['W1'] = np.random.randn(28*28, 32) * SIGMA
-        self.params['b1'] = np.random.rand(32) * SIGMA
-        self.params['W2'] = np.random.randn(32, 10) * SIGMA
-        self.params['b2'] = np.random.rand(10) * SIGMA
+        self.params['W1'] = np.random.randn(28*28, 16) * SIGMA
+        self.params['b1'] = np.random.rand(16) * SIGMA
+        self.params['W2'] = np.random.randn(16, 16) * SIGMA
+        self.params['b2'] = np.random.rand(16) * SIGMA
+        self.params['W3'] = np.random.randn(16, 10) * SIGMA
+        self.params['b3'] = np.random.rand(10) * SIGMA
 
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
         self.layers['Sigmoid1'] = SigmoidLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
+        self.layers['Sigmoid2'] = SigmoidLayer()
+        self.layers['Dense3'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
     def save_params(self, filename):
@@ -200,8 +204,9 @@ if __name__ == '__main__':
     print("Done!")
     # ==== End Training
 
-    # print(log)
-    pickle.dump(log, open('baseline_log.pkl', "wb"))
+    exp_name = '05_3layers_smaller'
+
+    pickle.dump(log, open(exp_name + '_log.pkl', "wb"))
 
 
     train_loss = fast_basic_net.loss(train_images, train_labels)
@@ -212,4 +217,4 @@ if __name__ == '__main__':
     test_acc = fast_basic_net.accuracy(test_images, test_labels)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    fast_basic_net.save_params("baseline_params.pkl")
+    fast_basic_net.save_params(exp_name + "_params.pkl")
