@@ -62,6 +62,23 @@ class SigmoidLayer():
         dZ = dA * (1 - self.A) * self.A
         return dZ
 
+class ReluLayer:
+    def __init__(self):
+        self.mask = None
+
+    def forward(self, X):
+        self.mask = (X <= 0)
+        Y = X.copy()
+        Y[self.mask] = 0
+
+        return Y
+
+    def backward(self, dY):
+        dY[self.mask] = 0
+        dX = dY
+
+        return dX
+
 class SoftmaxCrossEntropyLayer():
     def __init__(self):
         self.Y = None

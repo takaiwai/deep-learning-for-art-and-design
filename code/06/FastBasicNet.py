@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import pickle
 from lib.MNIST import MNIST
-from lib.layers import DenseLayer, SigmoidLayer, SoftmaxCrossEntropyLayer
+from lib.layers import DenseLayer, SigmoidLayer, ReluLayer, SoftmaxCrossEntropyLayer
 from collections import OrderedDict
 
 class FastBasicNet:
@@ -16,22 +16,22 @@ class FastBasicNet:
         self.init_layers()
 
     def init_params(self):
-        SIGMA = 0.01
+        SIGMA = 0.2
 
         self.params = {}
-        self.params['W1'] = np.random.randn(28*28, 16) * SIGMA
-        self.params['b1'] = np.random.rand(16) * SIGMA
-        self.params['W2'] = np.random.randn(16, 16) * SIGMA
-        self.params['b2'] = np.random.rand(16) * SIGMA
-        self.params['W3'] = np.random.randn(16, 10) * SIGMA
+        self.params['W1'] = np.random.randn(28*28, 64) * SIGMA
+        self.params['b1'] = np.random.rand(64) * SIGMA
+        self.params['W2'] = np.random.randn(64, 32) * SIGMA
+        self.params['b2'] = np.random.rand(32) * SIGMA
+        self.params['W3'] = np.random.randn(32, 10) * SIGMA
         self.params['b3'] = np.random.rand(10) * SIGMA
 
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
-        self.layers['Sigmoid1'] = SigmoidLayer()
+        self.layers['Relu1'] = ReluLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
-        self.layers['Sigmoid2'] = SigmoidLayer()
+        self.layers['Relu2'] = ReluLayer()
         self.layers['Dense3'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     print("Done!")
     # ==== End Training
 
-    exp_name = '05_3layers_smaller'
+    exp_name = '05_3layers_relu'
 
     pickle.dump(log, open(exp_name + '_log.pkl', "wb"))
 
