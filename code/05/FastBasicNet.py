@@ -45,14 +45,18 @@ class FastBasicNet:
         out = X
         for layer in self.layers.values():
             out = layer.forward(out)
-
         return out
 
     def loss(self, X, T):
         Z = self.predict(X)
         loss = self.last_layer.forward(Z, T)
-
         return loss
+
+    def accuracy(self, X, T):
+        Z = self.predict(X)
+        Z_index = np.argmax(Z, axis=1)
+        T_index = np.argmax(T, axis=1)
+        return np.mean(Z_index == T_index)
 
     def train(self, train_images, train_labels, epochs=5):
         train_size = train_images.shape[0]
@@ -161,13 +165,15 @@ if __name__ == '__main__':
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
 
-    batch_images = train_images[100:200]
-    batch_labels = train_labels[100:200]
-    # fast_basic_net.gradient_check(batch_images, batch_labels)
+    batch_images = train_images[:20]
+    batch_labels = train_labels[:20]
 
     # fast_basic_net.train(train_images, train_labels, epochs=5)
     # print("Done!")
 
     fast_basic_net.load_params('params_after_5_epochs.pkl')
-    loss = fast_basic_net.loss(batch_images, batch_labels)
-    print(loss)
+
+    # fast_basic_net.accuracy(batch_images, batch_labels)
+
+    acc = fast_basic_net.accuracy(test_images, test_labels)
+    print(acc)
