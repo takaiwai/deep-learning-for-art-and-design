@@ -146,6 +146,17 @@ if __name__ == '__main__':
     # batch_labels = train_labels[:20]
 
     # ==== Training
+    log = {
+        'loss_train': [],
+        'loss_train_itr': [],
+        'loss_test': [],
+        'loss_test_itr': [],
+        'accuracy_train': [],
+        'accuracy_train_itr': [],
+        'accuracy_test': [],
+        'accuracy_test_itr': [],
+    }
+    
     epochs = 5
     train_size = train_images.shape[0]
     batch_size = 100
@@ -164,11 +175,19 @@ if __name__ == '__main__':
                 train_loss = fast_basic_net.loss(train_images, train_labels)
                 test_loss = fast_basic_net.loss(test_images, test_labels)
                 print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
+                log['loss_train'].append(train_loss)
+                log['loss_train_itr'].append(itr)
+                log['loss_test'].append(test_loss)
+                log['loss_test_itr'].append(itr)
 
             if itr % 300 == 0:
                 train_acc = fast_basic_net.accuracy(train_images, train_labels)
                 test_acc = fast_basic_net.accuracy(test_images, test_labels)
                 print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
+                log['accuracy_train'].append(train_acc)
+                log['accuracy_train_itr'].append(itr)
+                log['accuracy_test'].append(test_acc)
+                log['accuracy_test_itr'].append(itr)
 
             # if itr % 100 == 0:
             #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
@@ -183,6 +202,9 @@ if __name__ == '__main__':
 
     print("Done!")
     # ==== End Training
+
+    print(log)
+    pickle.dump(log, open('log.pkl', "wb"))
 
 
     train_loss = fast_basic_net.loss(train_images, train_labels)
