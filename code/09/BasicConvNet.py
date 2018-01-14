@@ -167,7 +167,7 @@ class BasicConvNet:
     def gradient_descent(self, X, T):
         ETA = 0.1
         grads = net.gradients(X, T)
-        for param_name in ['W1', 'b1', 'W2', 'b2']:
+        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
             self.params[param_name] -= ETA * grads[param_name]
 
     def gradients(self, X, T):
@@ -182,8 +182,8 @@ class BasicConvNet:
         gradients = {}
         gradients['W1'] = self.layers['Convolution1'].dW
         gradients['b1'] = self.layers['Convolution1'].db
-        gradients['W2'] = self.layers['Convolution1'].dW
-        gradients['b2'] = self.layers['Convolution1'].db
+        gradients['W2'] = self.layers['Convolution2'].dW
+        gradients['b2'] = self.layers['Convolution2'].db
         gradients['W3'] = self.layers['Dense1'].dW
         gradients['b3'] = self.layers['Dense1'].db
         gradients['W4'] = self.layers['Dense2'].dW
@@ -286,16 +286,18 @@ if __name__ == '__main__':
     print("train_loss: ", train_loss)
 
 
-    # gradient
-    print("---------- gradient ----------")
-    gradient = net.gradients(batch_images, batch_labels)
-    print(gradient)
+    # # gradient
+    # print("---------- gradient ----------")
+    # gradient = net.gradients(batch_images, batch_labels)
+    # print(gradient)
+    #
+    # # numerical gradient
+    # print("---------- numerical gradient ----------")
+    # gradient = net.numerical_gradients(batch_images, batch_labels)
+    # print(gradient)
 
-    # numerical gradient
-    print("---------- numerical gradient ----------")
-    gradient = net.numerical_gradients(batch_images, batch_labels)
-    print(gradient)
-
+    print("---------- gradient check ----------")
+    net.gradient_check(batch_images, batch_labels)
 
     # itr = 0
     # for epoch in range(epochs):
