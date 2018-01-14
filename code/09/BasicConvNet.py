@@ -171,7 +171,8 @@ class BasicConvNet:
         self.params['b1'] = np.random.rand(2) * SIGMA
         self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
         self.params['b2'] = np.random.rand(4) * SIGMA
-        self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
+
+        self.params['W3'] = np.random.randn(3*3*4, 8) * SIGMA
         self.params['b3'] = np.random.rand(8) * SIGMA
         self.params['W4'] = np.random.randn(8, 10) * SIGMA
         self.params['b4'] = np.random.rand(10) * SIGMA
@@ -180,13 +181,12 @@ class BasicConvNet:
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
+        self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
         self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.layers['Sigmoid1'] = SigmoidLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
         self.last_layer = SoftmaxCrossEntropyLayer()
-
-        MaxPoolingLayer(stride=2)
 
     def save_params(self, filename):
         pickle.dump(self.params, open(filename, "wb"))
@@ -347,8 +347,8 @@ if __name__ == '__main__':
     # gradient = net.numerical_gradients(batch_images, batch_labels)
     # print(gradient)
 
-    # print("---------- gradient check ----------")
-    # net.gradient_check(batch_images, batch_labels)
+    print("---------- gradient check ----------")
+    net.gradient_check(batch_images, batch_labels)
 
 
     # itr = 0
