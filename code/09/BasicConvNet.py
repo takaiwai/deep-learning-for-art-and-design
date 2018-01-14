@@ -339,11 +339,12 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     # Test loss
-    batch_mask = np.random.choice(train_size, 100)
-    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
-    batch_labels = train_labels[batch_mask]
-    print("batch_images.shape: ", batch_images.shape)
-    print("batch_labels.shape: ", batch_labels.shape)
+    # batch_mask = np.random.choice(train_size, 100)
+    # print(batch_mask)
+    # batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+    # batch_labels = train_labels[batch_mask]
+    # print("batch_images.shape: ", batch_images.shape)
+    # print("batch_labels.shape: ", batch_labels.shape)
     # train_loss = net.loss(batch_images, batch_labels)
     # print("train_loss: ", train_loss)
 
@@ -351,16 +352,18 @@ if __name__ == '__main__':
     # net.gradient_descent(batch_images, batch_labels)
 
 
-    batch_mask = np.random.choice(train_size, 1)
+    # batch_mask = np.random.choice(train_size, 1)
+    batch_mask = 40204
+    print(batch_mask)
     batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
 
-    # gradient
-    print("---------- gradient ----------")
-    gradient = net.gradients(batch_images, batch_labels)
-    print(gradient)
+    # # gradient
+    # print("---------- gradient ----------")
+    # gradient = net.gradients(batch_images, batch_labels)
+    # print(gradient)
 
     # # numerical gradient
     # print("---------- numerical gradient ----------")
