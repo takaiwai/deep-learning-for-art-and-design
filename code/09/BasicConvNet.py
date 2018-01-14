@@ -118,16 +118,20 @@ class BasicConvNet:
         SIGMA = 0.01
 
         self.params = {}
-        self.params['W1'] = np.random.randn(28*28, 32) * SIGMA
-        self.params['b1'] = np.random.rand(32) * SIGMA
-        self.params['W2'] = np.random.randn(32, 10) * SIGMA
-        self.params['b2'] = np.random.rand(10) * SIGMA
+        self.params['W1'] = np.random.randn(4, 4, 1, 16) * SIGMA
+        self.params['b1'] = np.random.rand(16) * SIGMA
+        self.params['W2'] = np.random.randn(13*13*16, 32) * SIGMA
+        self.params['b2'] = np.random.rand(32) * SIGMA
+        self.params['W3'] = np.random.randn(32, 10) * SIGMA
+        self.params['b3'] = np.random.rand(10) * SIGMA
 
     def init_layers(self):
         self.layers = OrderedDict()
-        self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
+        self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
+        self.layers['Reshape1'] = ReshapeLayer((100, 13, 13, 16), (100, 13*13*16))
+        self.layers['Dense1'] = DenseLayer(self.params['W2'], self.params['b2'])
         self.layers['Sigmoid1'] = SigmoidLayer()
-        self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
+        self.layers['Dense2'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
     def save_params(self, filename):
@@ -173,10 +177,12 @@ class BasicConvNet:
             dL = layer.backward(dL)
 
         gradients = {}
-        gradients['W1'] = self.layers['Dense1'].dW
-        gradients['b1'] = self.layers['Dense1'].db
-        gradients['W2'] = self.layers['Dense2'].dW
-        gradients['b2'] = self.layers['Dense2'].db
+        gradients['W1'] = self.layers['Convolution1'].dW
+        gradients['b1'] = self.layers['Convolution1'].db
+        gradients['W2'] = self.layers['Dense1'].dW
+        gradients['b2'] = self.layers['Dense1'].db
+        gradients['W3'] = self.layers['Dense2'].dW
+        gradients['b3'] = self.layers['Dense2'].db
 
         return gradients
 
@@ -184,7 +190,7 @@ class BasicConvNet:
         loss = lambda: self.loss(X, T)
 
         gradients = {}
-        for param_name in ['W1', 'b1', 'W2', 'b2']:
+        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3']:
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
         return gradients
@@ -264,56 +270,77 @@ if __name__ == '__main__':
     iteration_per_epoch = train_size // batch_size
     total_iterations = iteration_per_epoch * epochs
 
-    itr = 0
-    for epoch in range(epochs):
-        print("========== Epoch {} ==========".format(epoch))
+    # Test loss
+    batch_mask = np.random.choice(train_size, batch_size)
+    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+    batch_labels = train_labels[batch_mask]
+    print("batch_images.shape: ", batch_images.shape)
+    print("batch_labels.shape: ", batch_labels.shape)
+    train_loss = net.loss(batch_images, batch_labels)
+    print("train_loss: ", train_loss)
 
-        for _ in range(iteration_per_epoch):
-            batch_mask = np.random.choice(train_size, batch_size)
-            batch_images = train_images[batch_mask]
-            batch_labels = train_labels[batch_mask]
 
-            if itr % 100 == 0:
-                print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+    # gradient
+    print("---------- gradient ----------")
+    gradient = net.gradients(batch_images, batch_labels)
+    print(gradient)
 
-            if itr % 100 == 0:
-                train_loss = net.loss(batch_images, batch_labels)
-                test_loss = net.loss(test_images, test_labels)
-                print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
-                log['loss_train'].append(train_loss)
-                log['loss_train_itr'].append(itr)
-                log['loss_test'].append(test_loss)
-                log['loss_test_itr'].append(itr)
+    # numerical gradient
+    print("---------- numerical gradient ----------")
+    gradient = net.numerical_gradients(batch_images, batch_labels)
+    print(gradient)
 
-            if itr % 100 == 0:
-                train_acc = net.accuracy(batch_images, batch_labels)
-                test_acc = net.accuracy(test_images, test_labels)
-                print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
-                log['accuracy_train'].append(train_acc)
-                log['accuracy_train_itr'].append(itr)
-                log['accuracy_test'].append(test_acc)
-                log['accuracy_test_itr'].append(itr)
 
-            # if itr % 100 == 0:
-            #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-            #     fast_basic_net.save_params(pickle_filename)
-
-            net.gradient_descent(batch_images, batch_labels)
-
-            itr += 1
-
-    print("Done!")
-    # ==== End Training
-
-    # print(log)
-    pickle.dump(log, open('log.pkl', "wb"))
-
-    train_loss = net.loss(train_images, train_labels)
-    test_loss = net.loss(test_images, test_labels)
-    print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
-
-    train_acc = net.accuracy(train_images, train_labels)
-    test_acc = net.accuracy(test_images, test_labels)
-    print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
-
-    net.save_params("params_6_epoch.pkl")
+    # itr = 0
+    # for epoch in range(epochs):
+    #     print("========== Epoch {} ==========".format(epoch))
+    #
+    #     for _ in range(iteration_per_epoch):
+    #         batch_mask = np.random.choice(train_size, batch_size)
+    #         batch_images = train_images[batch_mask]
+    #         batch_labels = train_labels[batch_mask]
+    #
+    #         if itr % 100 == 0:
+    #             print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+    #
+    #         if itr % 100 == 0:
+    #             train_loss = net.loss(batch_images, batch_labels)
+    #             test_loss = net.loss(test_images, test_labels)
+    #             print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
+    #             log['loss_train'].append(train_loss)
+    #             log['loss_train_itr'].append(itr)
+    #             log['loss_test'].append(test_loss)
+    #             log['loss_test_itr'].append(itr)
+    #
+    #         if itr % 100 == 0:
+    #             train_acc = net.accuracy(batch_images, batch_labels)
+    #             test_acc = net.accuracy(test_images, test_labels)
+    #             print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
+    #             log['accuracy_train'].append(train_acc)
+    #             log['accuracy_train_itr'].append(itr)
+    #             log['accuracy_test'].append(test_acc)
+    #             log['accuracy_test_itr'].append(itr)
+    #
+    #         # if itr % 100 == 0:
+    #         #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
+    #         #     fast_basic_net.save_params(pickle_filename)
+    #
+    #         net.gradient_descent(batch_images, batch_labels)
+    #
+    #         itr += 1
+    #
+    # print("Done!")
+    # # ==== End Training
+    #
+    # # print(log)
+    # pickle.dump(log, open('log.pkl', "wb"))
+    #
+    # train_loss = net.loss(train_images, train_labels)
+    # test_loss = net.loss(test_images, test_labels)
+    # print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
+    #
+    # train_acc = net.accuracy(train_images, train_labels)
+    # test_acc = net.accuracy(test_images, test_labels)
+    # print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
+    #
+    # net.save_params("params_6_epoch.pkl")
