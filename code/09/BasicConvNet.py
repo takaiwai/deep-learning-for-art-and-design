@@ -353,7 +353,7 @@ if __name__ == '__main__':
 
 
     # batch_mask = np.random.choice(train_size, 1)
-    batch_mask = 40204
+    batch_mask = 42878
     print(batch_mask)
     batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
