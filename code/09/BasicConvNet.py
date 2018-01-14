@@ -96,7 +96,7 @@ class ConvolutionLayer:
         return dX
 
 class MaxPoolingLayer:
-    def __init__(self, stride=1):
+    def __init__(self, stride):
         self.stride = stride
         self.X = None
 
@@ -172,6 +172,7 @@ class BasicConvNet:
         self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
         self.params['b2'] = np.random.rand(4) * SIGMA
 
+        # self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
         self.params['W3'] = np.random.randn(3*3*4, 8) * SIGMA
         self.params['b3'] = np.random.rand(8) * SIGMA
         self.params['W4'] = np.random.randn(8, 10) * SIGMA
@@ -180,7 +181,9 @@ class BasicConvNet:
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
+        self.layers['Sigmoida'] = SigmoidLayer()
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
+        self.layers['Sigmoidb'] = SigmoidLayer()
         self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
         self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
@@ -328,8 +331,8 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     # Test loss
-    batch_mask = np.random.choice(train_size, 10)
-    batch_images = train_images[batch_mask].reshape(10, 28, 28, 1)
+    batch_mask = np.random.choice(train_size, 50)
+    batch_images = train_images[batch_mask].reshape(50, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
