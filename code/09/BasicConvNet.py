@@ -118,20 +118,23 @@ class BasicConvNet:
         SIGMA = 0.01
 
         self.params = {}
-        self.params['W1'] = np.random.randn(4, 4, 1, 16) * SIGMA
-        self.params['b1'] = np.random.rand(16) * SIGMA
-        self.params['W2'] = np.random.randn(13*13*16, 32) * SIGMA
-        self.params['b2'] = np.random.rand(32) * SIGMA
-        self.params['W3'] = np.random.randn(32, 10) * SIGMA
-        self.params['b3'] = np.random.rand(10) * SIGMA
+        self.params['W1'] = np.random.randn(4, 4, 1, 2) * SIGMA
+        self.params['b1'] = np.random.rand(2) * SIGMA
+        self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
+        self.params['b2'] = np.random.rand(4) * SIGMA
+        self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
+        self.params['b3'] = np.random.rand(8) * SIGMA
+        self.params['W4'] = np.random.randn(8, 10) * SIGMA
+        self.params['b4'] = np.random.rand(10) * SIGMA
 
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
-        self.layers['Reshape1'] = ReshapeLayer((100, 13, 13, 16), (100, 13*13*16))
-        self.layers['Dense1'] = DenseLayer(self.params['W2'], self.params['b2'])
+        self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
+        self.layers['Reshape1'] = ReshapeLayer((100, 6, 6, 4), (100, 6*6*4))
+        self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.layers['Sigmoid1'] = SigmoidLayer()
-        self.layers['Dense2'] = DenseLayer(self.params['W3'], self.params['b3'])
+        self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
     def save_params(self, filename):
@@ -179,10 +182,12 @@ class BasicConvNet:
         gradients = {}
         gradients['W1'] = self.layers['Convolution1'].dW
         gradients['b1'] = self.layers['Convolution1'].db
-        gradients['W2'] = self.layers['Dense1'].dW
-        gradients['b2'] = self.layers['Dense1'].db
-        gradients['W3'] = self.layers['Dense2'].dW
-        gradients['b3'] = self.layers['Dense2'].db
+        gradients['W2'] = self.layers['Convolution1'].dW
+        gradients['b2'] = self.layers['Convolution1'].db
+        gradients['W3'] = self.layers['Dense1'].dW
+        gradients['b3'] = self.layers['Dense1'].db
+        gradients['W4'] = self.layers['Dense2'].dW
+        gradients['b4'] = self.layers['Dense2'].db
 
         return gradients
 
@@ -190,7 +195,8 @@ class BasicConvNet:
         loss = lambda: self.loss(X, T)
 
         gradients = {}
-        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3']:
+        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
+            print("Calculating numerical gradient with respect to: ", param_name)
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
         return gradients
