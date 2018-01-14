@@ -95,6 +95,16 @@ class ConvolutionLayer:
 
         return dX
 
+class ReshapeLayer:
+    def __init__(self, input_shape, output_shape):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
+    def forward(self, X):
+        return X.reshape(self.output_shape)
+
+    def backward(self, dY):
+        return dY.reshape(self.input_shape)
 
 class BasicConvNet:
     def __init__(self):
