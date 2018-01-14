@@ -96,12 +96,12 @@ class ConvolutionLayer:
         return dX
 
 class ReshapeLayer:
-    def __init__(self, input_shape, output_shape):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
+    def __init__(self):
+        self.input_shape = None
 
     def forward(self, X):
-        return X.reshape(self.output_shape)
+        self.input_shape = X.shape
+        return X.reshape(self.input_shape[0], -1)
 
     def backward(self, dY):
         return dY.reshape(self.input_shape)
@@ -131,7 +131,7 @@ class BasicConvNet:
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
-        self.layers['Reshape1'] = ReshapeLayer((100, 6, 6, 4), (100, 6*6*4))
+        self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.layers['Sigmoid1'] = SigmoidLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
@@ -277,8 +277,8 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     # Test loss
-    batch_mask = np.random.choice(train_size, batch_size)
-    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+    batch_mask = np.random.choice(train_size, 10)
+    batch_images = train_images[batch_mask].reshape(10, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
@@ -290,7 +290,7 @@ if __name__ == '__main__':
     # print("---------- gradient ----------")
     # gradient = net.gradients(batch_images, batch_labels)
     # print(gradient)
-    #
+
     # # numerical gradient
     # print("---------- numerical gradient ----------")
     # gradient = net.numerical_gradients(batch_images, batch_labels)
@@ -298,6 +298,7 @@ if __name__ == '__main__':
 
     print("---------- gradient check ----------")
     net.gradient_check(batch_images, batch_labels)
+
 
     # itr = 0
     # for epoch in range(epochs):
