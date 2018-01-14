@@ -95,6 +95,55 @@ class ConvolutionLayer:
 
         return dX
 
+class MaxPoolingLayer:
+    def __init__(self, stride=1):
+        self.stride = stride
+        self.X = None
+
+    def forward(self, X):
+        N_batch, H_in, W_in, C_in = X.shape
+
+        H_out = H_in // self.stride
+        W_out = W_in // self.stride
+
+        Y = np.zeros((N_batch, H_out, W_out, C_in))
+        for h in range(H_out):
+            h_start = h * self.stride
+            h_end = h_start + self.stride
+            for w in range(W_out):
+                w_start = w * self.stride
+                w_end = w_start + self.stride
+                X_slice = X[:, h_start:h_end, w_start:w_end, :]
+                Y[:, h, w, :] = np.max(X_slice, axis=(1, 2))
+
+        self.X = X
+
+        return Y
+
+    def backward(self, dY):
+        N_batch, H_in, W_in, C_in = self.X.shape
+
+        H_out = H_in // self.stride
+        W_out = W_in // self.stride
+
+        dX = np.zeros_like(self.X)
+
+        for n_batch in range(N_batch):
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + self.stride
+                    w_start = w * self.stride
+                    w_end = w_start + self.stride
+
+                    X_slice = self.X[n_batch, h_start:h_end, w_start:w_end, :]
+                    X_slice_mask = X_slice == np.max(X_slice, axis=(0, 1))
+                    current_dY = dY[n_batch, h, w, :]
+                    dX_slice = X_slice_mask * current_dY
+                    dX[n_batch, h_start:h_end, w_start:w_end, :] = dX_slice
+
+        return dX
+
 class ReshapeLayer:
     def __init__(self):
         self.input_shape = None
@@ -136,6 +185,8 @@ class BasicConvNet:
         self.layers['Sigmoid1'] = SigmoidLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
         self.last_layer = SoftmaxCrossEntropyLayer()
+
+        MaxPoolingLayer(stride=2)
 
     def save_params(self, filename):
         pickle.dump(self.params, open(filename, "wb"))
@@ -296,8 +347,8 @@ if __name__ == '__main__':
     # gradient = net.numerical_gradients(batch_images, batch_labels)
     # print(gradient)
 
-    print("---------- gradient check ----------")
-    net.gradient_check(batch_images, batch_labels)
+    # print("---------- gradient check ----------")
+    # net.gradient_check(batch_images, batch_labels)
 
 
     # itr = 0
