@@ -174,13 +174,15 @@ class BasicConvNet:
         self.init_layers()
 
     def init_params(self):
-        SIGMA = 0.5
+        SIGMA = 0.1
 
         self.params = {}
         self.params['W1'] = np.random.randn(4, 4, 1, 2) * SIGMA
-        self.params['b1'] = np.random.randn(2)
+        # self.params['b1'] = np.random.randn(2)
+        self.params['b1'] = np.zeros(2)
         self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
-        self.params['b2'] = np.random.randn(4)
+        # self.params['b2'] = np.random.randn(4)
+        self.params['b2'] = np.zeros(4)
 
         # self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
         self.params['W3'] = np.random.randn(3*3*4, 8) * SIGMA
@@ -227,7 +229,7 @@ class BasicConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.1
+        ETA = 0.001
         grads = net.gradients(X, T)
         for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
             self.params[param_name] -= ETA * grads[param_name]
@@ -309,7 +311,7 @@ class BasicConvNet:
 if __name__ == '__main__':
     print("this is main")
 
-    np.random.seed(1229)
+    np.random.seed(122)
 
     net = BasicConvNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
@@ -339,23 +341,27 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     # Test loss
-    # batch_mask = np.random.choice(train_size, 100)
-    # print(batch_mask)
-    # batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
-    # batch_labels = train_labels[batch_mask]
+    batch_mask = np.random.choice(train_size, 100)
+    print(batch_mask)
+    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+    batch_labels = train_labels[batch_mask]
     # print("batch_images.shape: ", batch_images.shape)
     # print("batch_labels.shape: ", batch_labels.shape)
-    # train_loss = net.loss(batch_images, batch_labels)
-    # print("train_loss: ", train_loss)
+    train_loss = net.loss(batch_images, batch_labels)
+    print("train_loss: ", train_loss)
 
 
-    # net.gradient_descent(batch_images, batch_labels)
+    for _ in range(10):
+        batch_mask = np.random.choice(train_size, 100)
+        batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+        batch_labels = train_labels[batch_mask]
+        net.gradient_descent(batch_images, batch_labels)
 
 
-    # batch_mask = np.random.choice(train_size, 1)
-    batch_mask = 42878
+    batch_mask = np.random.choice(train_size, 10)
+    # batch_mask = 42
     print(batch_mask)
-    batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
+    batch_images = train_images[batch_mask].reshape(10, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
