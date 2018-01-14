@@ -7,7 +7,7 @@ from lib.MNIST import MNIST
 from lib.layers import DenseLayer, SigmoidLayer, SoftmaxCrossEntropyLayer
 from collections import OrderedDict
 
-class FastBasicNet:
+class BasicConvNet:
     def __init__(self):
         self.params = None
         self.layers = None
@@ -60,7 +60,7 @@ class FastBasicNet:
 
     def gradient_descent(self, X, T):
         ETA = 0.1
-        grads = fast_basic_net.gradients(X, T)
+        grads = net.gradients(X, T)
         for param_name in ['W1', 'b1', 'W2', 'b2']:
             self.params[param_name] -= ETA * grads[param_name]
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
     np.random.seed(1229)
 
-    fast_basic_net = FastBasicNet()
+    net = BasicConvNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
 
     mnist = MNIST()
@@ -178,8 +178,8 @@ if __name__ == '__main__':
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
             if itr % 100 == 0:
-                train_loss = fast_basic_net.loss(batch_images, batch_labels)
-                test_loss = fast_basic_net.loss(test_images, test_labels)
+                train_loss = net.loss(batch_images, batch_labels)
+                test_loss = net.loss(test_images, test_labels)
                 print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
                 log['loss_train'].append(train_loss)
                 log['loss_train_itr'].append(itr)
@@ -187,8 +187,8 @@ if __name__ == '__main__':
                 log['loss_test_itr'].append(itr)
 
             if itr % 100 == 0:
-                train_acc = fast_basic_net.accuracy(batch_images, batch_labels)
-                test_acc = fast_basic_net.accuracy(test_images, test_labels)
+                train_acc = net.accuracy(batch_images, batch_labels)
+                test_acc = net.accuracy(test_images, test_labels)
                 print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
                 log['accuracy_train'].append(train_acc)
                 log['accuracy_train_itr'].append(itr)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
             #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
             #     fast_basic_net.save_params(pickle_filename)
 
-            fast_basic_net.gradient_descent(batch_images, batch_labels)
+            net.gradient_descent(batch_images, batch_labels)
 
             itr += 1
 
@@ -209,13 +209,12 @@ if __name__ == '__main__':
     # print(log)
     pickle.dump(log, open('log.pkl', "wb"))
 
-
-    train_loss = fast_basic_net.loss(train_images, train_labels)
-    test_loss = fast_basic_net.loss(test_images, test_labels)
+    train_loss = net.loss(train_images, train_labels)
+    test_loss = net.loss(test_images, test_labels)
     print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
 
-    train_acc = fast_basic_net.accuracy(train_images, train_labels)
-    test_acc = fast_basic_net.accuracy(test_images, test_labels)
+    train_acc = net.accuracy(train_images, train_labels)
+    test_acc = net.accuracy(test_images, test_labels)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    fast_basic_net.save_params("params_6_epoch.pkl")
+    net.save_params("params_6_epoch.pkl")
