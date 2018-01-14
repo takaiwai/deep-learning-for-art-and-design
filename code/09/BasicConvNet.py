@@ -101,6 +101,9 @@ class MaxPoolingLayer:
         self.X = None
 
     def forward(self, X):
+        # print('=================== Max Pooling forward ===================')
+        # print("--------input X: ", X.shape)
+        # print(X)
         N_batch, H_in, W_in, C_in = X.shape
 
         H_out = H_in // self.stride
@@ -117,10 +120,15 @@ class MaxPoolingLayer:
                 Y[:, h, w, :] = np.max(X_slice, axis=(1, 2))
 
         self.X = X
+        # print("--------output Y: ", Y.shape)
+        # print(Y)
 
         return Y
 
     def backward(self, dY):
+        # print('=================== Max Pooling backward ===================')
+        # print("--------input dY: ", dY.shape)
+        # print(dY)
         N_batch, H_in, W_in, C_in = self.X.shape
 
         H_out = H_in // self.stride
@@ -142,6 +150,8 @@ class MaxPoolingLayer:
                     dX_slice = X_slice_mask * current_dY
                     dX[n_batch, h_start:h_end, w_start:w_end, :] = dX_slice
 
+        # print("--------output dX: ", dX.shape)
+        # print(dX)
         return dX
 
 class ReshapeLayer:
@@ -164,13 +174,13 @@ class BasicConvNet:
         self.init_layers()
 
     def init_params(self):
-        SIGMA = 0.01
+        SIGMA = 0.5
 
         self.params = {}
         self.params['W1'] = np.random.randn(4, 4, 1, 2) * SIGMA
-        self.params['b1'] = np.random.rand(2) * SIGMA
+        self.params['b1'] = np.random.randn(2)
         self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
-        self.params['b2'] = np.random.rand(4) * SIGMA
+        self.params['b2'] = np.random.randn(4)
 
         # self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
         self.params['W3'] = np.random.randn(3*3*4, 8) * SIGMA
@@ -181,9 +191,7 @@ class BasicConvNet:
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
-        self.layers['Sigmoida'] = SigmoidLayer()
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
-        self.layers['Sigmoidb'] = SigmoidLayer()
         self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
         self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
@@ -295,7 +303,7 @@ class BasicConvNet:
             else:
                 result = 'NG'
 
-            print("gradient {}: {} ({})".format(key, result, check))
+            print("gradient {}: {} ({}) diff: {}, prop: {}".format(key, result, check, diff, prop))
 
 
 if __name__ == '__main__':
@@ -331,19 +339,28 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     # Test loss
-    batch_mask = np.random.choice(train_size, 50)
-    batch_images = train_images[batch_mask].reshape(50, 28, 28, 1)
+    batch_mask = np.random.choice(train_size, 100)
+    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
-    train_loss = net.loss(batch_images, batch_labels)
-    print("train_loss: ", train_loss)
+    # train_loss = net.loss(batch_images, batch_labels)
+    # print("train_loss: ", train_loss)
 
 
-    # # gradient
-    # print("---------- gradient ----------")
-    # gradient = net.gradients(batch_images, batch_labels)
-    # print(gradient)
+    # net.gradient_descent(batch_images, batch_labels)
+
+
+    batch_mask = np.random.choice(train_size, 1)
+    batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
+    batch_labels = train_labels[batch_mask]
+    print("batch_images.shape: ", batch_images.shape)
+    print("batch_labels.shape: ", batch_labels.shape)
+
+    # gradient
+    print("---------- gradient ----------")
+    gradient = net.gradients(batch_images, batch_labels)
+    print(gradient)
 
     # # numerical gradient
     # print("---------- numerical gradient ----------")
