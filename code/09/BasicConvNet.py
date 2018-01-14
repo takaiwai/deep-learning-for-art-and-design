@@ -7,6 +7,95 @@ from lib.MNIST import MNIST
 from lib.layers import DenseLayer, SigmoidLayer, SoftmaxCrossEntropyLayer
 from collections import OrderedDict
 
+class ConvolutionLayer:
+    def __init__(self, W, b, padding=0, stride=1):
+        self.W = W
+        self.b = b
+        self.padding = padding
+        self.stride = stride
+
+        self.X = None
+        self.X_col = None
+        self.W_col = None
+
+        self.dW = None
+        self.db = None
+
+    def forward(self, X):
+        N_batch, H_in, W_in, C_in = X.shape
+        H_filter, W_filter, C_in, C_out = self.W.shape
+
+        H_out = (H_in + 2 * self.padding - H_filter) // self.stride + 1
+        W_out = (W_in + 2 * self.padding - W_filter) // self.stride + 1
+
+        if self.padding > 0:
+            X = np.pad(X, ((0, 0), (self.padding, self.padding), (self.padding, self.padding), (0, 0)), 'constant')
+
+        X_col = np.zeros((N_batch * H_out * W_out, H_filter * W_filter * C_in))
+        X_col_row_index = 0
+        for n_batch in range(N_batch):  # TODO: Maybe I can remove this loop over N_batch?
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + H_filter
+                    w_start = w * self.stride
+                    w_end = w_start + W_filter
+
+                    X_slice = X[n_batch, h_start:h_end, w_start:w_end, :].transpose(2, 0, 1)
+                    X_col[X_col_row_index, :] = X_slice.reshape(1, -1)
+                    X_col_row_index += 1  # X_col_row_index = n_batch * (H_out * W_out) + h * W_out + w
+
+        W_col = self.W.transpose(2, 0, 1, 3).reshape(-1, C_out)
+
+        Y_col = np.dot(X_col, W_col)
+        Y = Y_col.reshape(N_batch, H_out, W_out, C_out) + self.b
+
+        self.X = X
+        self.X_col = X_col
+        self.W_col = W_col
+
+        return Y
+
+    def backward(self, dY):
+        N_batch, H_in, W_in, C_in = self.X.shape
+        H_filter, W_filter, _, C_out = self.W.shape
+        _, H_out, W_out, _ = dY.shape
+
+        # dY
+        dY_col = dY.reshape(-1, C_out)
+
+        # db
+        db = np.sum(dY, axis=(0, 1, 2))
+
+        # dW
+        dW_col = np.dot(self.X_col.T, dY_col)
+        dW = dW_col.reshape(C_in, H_filter, W_filter, C_out).transpose(1, 2, 0, 3)
+
+        # dX
+        dX_col = np.dot(dY_col, self.W_col.T)
+        dX = np.zeros((N_batch, H_in + 2 * self.padding, W_in + 2 * self.padding, C_in))
+        dX_col_row_index = 0
+        for n_batch in range(N_batch):
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + H_filter
+                    w_start = w * self.stride
+                    w_end = w_start + W_filter
+
+                    dX_col_slice = dX_col[dX_col_row_index, :].reshape(C_in, H_filter, W_filter).transpose(1, 2, 0)
+                    dX[n_batch, h_start:h_end, w_start:w_end, :] += dX_col_slice
+                    dX_col_row_index += 1  # dX_col_row_index = n_batch * (H_out * W_out) + h * W_out + w
+
+        if self.padding > 0:
+            dX = dX[:, self.padding:-self.padding, self.padding:-self.padding, :]
+
+        self.dW = dW
+        self.db = db
+
+        return dX
+
+
 class BasicConvNet:
     def __init__(self):
         self.params = None
