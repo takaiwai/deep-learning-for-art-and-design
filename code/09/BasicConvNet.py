@@ -175,18 +175,18 @@ class BasicConvNet:
         self.init_layers()
 
     def init_params(self):
-        SIGMA = 0.1
+        SMALL_POSITIVE = 0.1
 
         self.params = {}
-        self.params['W1'] = np.random.randn(3, 3, 1, 16) * SIGMA
-        self.params['b1'] = np.ones(16) * SIGMA
-        self.params['W2'] = np.random.randn(3, 3, 16, 16) * SIGMA
-        self.params['b2'] = np.ones(16) * SIGMA
+        self.params['W1'] = np.random.randn(3, 3, 1, 16) * np.sqrt(2. / (28*28))
+        self.params['b1'] = np.ones(16) * SMALL_POSITIVE
+        self.params['W2'] = np.random.randn(3, 3, 16, 16) * np.sqrt(2. / (3*3*1))
+        self.params['b2'] = np.ones(16) * SMALL_POSITIVE
 
-        self.params['W3'] = np.random.randn(7*7*16, 16) * SIGMA
-        self.params['b3'] = np.random.rand(16) * SIGMA
-        self.params['W4'] = np.random.randn(16, 10) * SIGMA
-        self.params['b4'] = np.random.rand(10) * SIGMA
+        self.params['W3'] = np.random.randn(7*7*16, 16) * np.sqrt(2. / (3*3*16))
+        self.params['b3'] = np.ones(16) * SMALL_POSITIVE
+        self.params['W4'] = np.random.randn(16, 10) * np.sqrt(2. / (7*7*16))
+        self.params['b4'] = np.ones(10) * SMALL_POSITIVE
 
     def init_layers(self):
         self.layers = OrderedDict()
