@@ -179,9 +179,9 @@ class BasicConvNet:
 
         self.params = {}
         self.params['W1'] = np.random.randn(3, 3, 1, 16) * SIGMA
-        self.params['b1'] = np.zeros(16)
+        self.params['b1'] = np.ones(16) * SIGMA
         self.params['W2'] = np.random.randn(3, 3, 16, 16) * SIGMA
-        self.params['b2'] = np.zeros(16)
+        self.params['b2'] = np.ones(16) * SIGMA
 
         self.params['W3'] = np.random.randn(7*7*16, 16) * SIGMA
         self.params['b3'] = np.random.rand(16) * SIGMA
@@ -232,7 +232,7 @@ class BasicConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.001
+        ETA = 0.05
         grads = net.gradients(X, T)
         for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
             self.params[param_name] -= ETA * grads[param_name]
@@ -337,7 +337,7 @@ if __name__ == '__main__':
         'accuracy_test_itr': [],
     }
     
-    epochs = 1
+    epochs = 3
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
@@ -356,7 +356,7 @@ if __name__ == '__main__':
 
     print("---------- gradient ----------")
     gradient = net.gradients(batch_images, batch_labels)
-    print(gradient)
+    # print(gradient)
 
     # # numerical gradient
     # print("---------- numerical gradient ----------")
@@ -379,7 +379,7 @@ if __name__ == '__main__':
             if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr != 0 and itr % 100 == 0:
+            if itr != 0 and itr % 20 == 0:
                 train_loss = net.loss(batch_images, batch_labels)
                 # test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
                 test_loss = 0
@@ -389,7 +389,7 @@ if __name__ == '__main__':
                 log['loss_test'].append(test_loss)
                 log['loss_test_itr'].append(itr)
 
-            if itr != 0 and itr % 100 == 0:
+            if itr != 0 and itr % 20 == 0:
                 train_acc = net.accuracy(batch_images, batch_labels)
                 # test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
                 test_acc = 0
@@ -416,13 +416,13 @@ if __name__ == '__main__':
     #
 
     print("Calculating losses...")
-    # train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
-    # test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
-    # print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
+    train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
+    test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+    print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
 
     print("Calculating accuracy...")
-    # train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
-    # test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
-    # print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
-    #
-    # net.save_params("params_6_epoch.pkl")
+    train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
+    test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+    print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
+
+    net.save_params("BasicConvNet_params_3_epoch.pkl")
