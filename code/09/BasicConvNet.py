@@ -243,7 +243,7 @@ class BasicConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.001
+        ETA = 0.0001
         grads = net.gradients(X, T)
         for param_name in list(self.params.keys()):
             self.params[param_name] -= ETA * grads[param_name]
@@ -336,7 +336,7 @@ if __name__ == '__main__':
     np.random.seed(10)
 
     net = BasicConvNet()
-    # net.load_params("BasicConvNet_params_3_epoch.pkl")
+    net.load_params("BasicConvNet_params_3_epoch.pkl")
 
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
@@ -356,7 +356,7 @@ if __name__ == '__main__':
         'accuracy_test_itr': [],
     }
     
-    epochs = 3
+    epochs = 7
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
@@ -442,4 +442,4 @@ if __name__ == '__main__':
     test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    net.save_params("BasicConvNet_params_3_epoch.pkl")
+    net.save_params("BasicConvNet_params_10_epoch.pkl")
