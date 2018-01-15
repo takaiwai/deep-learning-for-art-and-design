@@ -22,6 +22,7 @@ class ConvolutionLayer:
         self.db = None
 
     def forward(self, X):
+        self.X = X
         N_batch, H_in, W_in, C_in = X.shape
         H_filter, W_filter, C_in, C_out = self.W.shape
 
