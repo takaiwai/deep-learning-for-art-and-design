@@ -126,9 +126,9 @@ class MaxPoolingLayer:
         return Y
 
     def backward(self, dY):
-        print('=================== Max Pooling backward ===================')
-        print("--------input dY: ", dY.shape)
-        print(dY)
+        # print('=================== Max Pooling backward ===================')
+        # print("--------input dY: ", dY.shape)
+        # print(dY)
         N_batch, H_in, W_in, C_in = self.X.shape
 
         H_out = H_in // self.stride
@@ -150,8 +150,8 @@ class MaxPoolingLayer:
                     dX_slice = X_slice_mask * current_dY
                     dX[n_batch, h_start:h_end, w_start:w_end, :] = dX_slice
 
-        print("--------output dX: ", dX.shape)
-        print(dX)
+        # print("--------output dX: ", dX.shape)
+        # print(dX)
         return dX
 
 class ReshapeLayer:
@@ -268,7 +268,7 @@ class BasicConvNet:
         return gradients
 
     def numerical_gradient(self, loss, variables):
-        h = 1e-4
+        h = 1e-7
         gradients = np.zeros_like(variables)
 
         itr = np.nditer(variables, flags=['multi_index'], op_flags=['readwrite'])
@@ -313,7 +313,7 @@ class BasicConvNet:
 if __name__ == '__main__':
     print("this is main")
 
-    np.random.seed(122)
+    np.random.seed(10)
 
     net = BasicConvNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
@@ -378,8 +378,8 @@ if __name__ == '__main__':
     # gradient = net.numerical_gradients(batch_images, batch_labels)
     # print(gradient)
 
-    # print("---------- gradient check ----------")
-    # net.gradient_check(batch_images, batch_labels)
+    print("---------- gradient check ----------")
+    net.gradient_check(batch_images, batch_labels)
 
 
     # itr = 0
