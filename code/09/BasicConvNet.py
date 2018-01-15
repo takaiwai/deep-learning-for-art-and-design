@@ -51,7 +51,6 @@ class ConvolutionLayer:
         Y_col = np.dot(X_col, W_col)
         Y = Y_col.reshape(N_batch, H_out, W_out, C_out) + self.b
 
-        self.X = X
         self.X_col = X_col
         self.W_col = W_col
 
@@ -102,8 +101,6 @@ class MaxPoolingLayer:
         self.X = None
 
     def forward(self, X):
-        # print('=================== Max Pooling forward ===================')
-        # print("--------input X: ", X.shape)
         # print(X)
         N_batch, H_in, W_in, C_in = X.shape
 
@@ -176,7 +173,7 @@ class BasicConvNet:
         self.init_layers()
 
     def init_params(self):
-        SMALL_POSITIVE = 0.1
+        SMALL_POSITIVE = 0.01
 
         self.params = {}
         self.params['W1'] = np.random.randn(3, 3, 1, 16) * np.sqrt(2. / (28*28))
@@ -184,25 +181,38 @@ class BasicConvNet:
         self.params['W2'] = np.random.randn(3, 3, 16, 16) * np.sqrt(2. / (3*3*1))
         self.params['b2'] = np.ones(16) * SMALL_POSITIVE
 
-        self.params['W3'] = np.random.randn(7*7*16, 16) * np.sqrt(2. / (3*3*16))
-        self.params['b3'] = np.ones(16) * SMALL_POSITIVE
-        self.params['W4'] = np.random.randn(16, 10) * np.sqrt(2. / (7*7*16))
-        self.params['b4'] = np.ones(10) * SMALL_POSITIVE
+        self.params['W3'] = np.random.randn(3, 3, 16, 32) * np.sqrt(2. / (3*3*16))
+        self.params['b3'] = np.ones(32) * SMALL_POSITIVE
+        self.params['W4'] = np.random.randn(3, 3, 32, 32) * np.sqrt(2. / (3*3*16))
+        self.params['b4'] = np.ones(32) * SMALL_POSITIVE
+
+        self.params['W5'] = np.random.randn(7*7*32, 256) * np.sqrt(2. / (7*7*32))
+        self.params['b5'] = np.ones(256) * SMALL_POSITIVE
+        self.params['W6'] = np.random.randn(256, 256) * np.sqrt(2. / 256)
+        self.params['b6'] = np.ones(256) * SMALL_POSITIVE
+        self.params['W7'] = np.random.randn(256, 10) * np.sqrt(2. / 256)
+        self.params['b7'] = np.ones(10) * SMALL_POSITIVE
 
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=1, padding=1)
         self.layers['Relu1'] = ReluLayer()
-        self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
-
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=1, padding=1)
         self.layers['Relu2'] = ReluLayer()
-        self.layers['MaxPooling2'] = MaxPoolingLayer(stride=2)
+        self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
 
-        self.layers['Reshape1'] = ReshapeLayer()
-        self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
+        self.layers['Convolution3'] = ConvolutionLayer(self.params['W3'], self.params['b3'], stride=1, padding=1)
         self.layers['Relu3'] = ReluLayer()
-        self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
+        self.layers['Convolution4'] = ConvolutionLayer(self.params['W4'], self.params['b4'], stride=1, padding=1)
+        self.layers['Relu4'] = ReluLayer()
+        self.layers['MaxPooling2'] = MaxPoolingLayer(stride=2)
+        self.layers['Reshape'] = ReshapeLayer()
+
+        self.layers['Dense1'] = DenseLayer(self.params['W5'], self.params['b5'])
+        self.layers['Relu5'] = ReluLayer()
+        self.layers['Dense2'] = DenseLayer(self.params['W6'], self.params['b6'])
+        self.layers['Relu6'] = ReluLayer()
+        self.layers['Dense3'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
     def save_params(self, filename):
@@ -233,9 +243,9 @@ class BasicConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.01
+        ETA = 0.001
         grads = net.gradients(X, T)
-        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
+        for param_name in list(self.params.keys()):
             self.params[param_name] -= ETA * grads[param_name]
 
     def gradients(self, X, T):
@@ -252,10 +262,18 @@ class BasicConvNet:
         gradients['b1'] = self.layers['Convolution1'].db
         gradients['W2'] = self.layers['Convolution2'].dW
         gradients['b2'] = self.layers['Convolution2'].db
-        gradients['W3'] = self.layers['Dense1'].dW
-        gradients['b3'] = self.layers['Dense1'].db
-        gradients['W4'] = self.layers['Dense2'].dW
-        gradients['b4'] = self.layers['Dense2'].db
+
+        gradients['W3'] = self.layers['Convolution3'].dW
+        gradients['b3'] = self.layers['Convolution3'].db
+        gradients['W4'] = self.layers['Convolution4'].dW
+        gradients['b4'] = self.layers['Convolution4'].db
+
+        gradients['W5'] = self.layers['Dense1'].dW
+        gradients['b5'] = self.layers['Dense1'].db
+        gradients['W6'] = self.layers['Dense2'].dW
+        gradients['b6'] = self.layers['Dense2'].db
+        gradients['W7'] = self.layers['Dense3'].dW
+        gradients['b7'] = self.layers['Dense3'].db
 
         return gradients
 
@@ -263,7 +281,7 @@ class BasicConvNet:
         loss = lambda: self.loss(X, T)
 
         gradients = {}
-        for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
+        for param_name in list(self.params.keys()):
             print("Calculating numerical gradient with respect to: ", param_name)
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
@@ -318,7 +336,7 @@ if __name__ == '__main__':
     np.random.seed(10)
 
     net = BasicConvNet()
-    # fast_basic_net.load_params('params_after_5_epochs.pkl')
+    # net.load_params("BasicConvNet_params_3_epoch.pkl")
 
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
@@ -367,7 +385,6 @@ if __name__ == '__main__':
     # print("---------- gradient check ----------")
     # net.gradient_check(batch_images, batch_labels)
 
-
     itr = 0
     for epoch in range(epochs):
         print("========== Epoch {} ==========".format(epoch))
@@ -390,10 +407,9 @@ if __name__ == '__main__':
                 log['loss_test'].append(test_loss)
                 log['loss_test_itr'].append(itr)
 
-            if itr != 0 and itr % 20 == 0:
+            if itr != 0 and itr % 300 == 0:
                 train_acc = net.accuracy(batch_images, batch_labels)
-                # test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
-                test_acc = 0
+                test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
                 print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
                 log['accuracy_train'].append(train_acc)
                 log['accuracy_train_itr'].append(itr)
