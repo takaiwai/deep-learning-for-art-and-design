@@ -232,7 +232,7 @@ class BasicConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.05
+        ETA = 0.01
         grads = net.gradients(X, T)
         for param_name in ['W1', 'b1', 'W2', 'b2', 'W3', 'b3', 'W4', 'b4']:
             self.params[param_name] -= ETA * grads[param_name]
