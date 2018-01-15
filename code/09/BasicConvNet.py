@@ -269,7 +269,7 @@ class BasicConvNet:
         return gradients
 
     def numerical_gradient(self, loss, variables):
-        h = 1e-7
+        h = 1e-8
         gradients = np.zeros_like(variables)
 
         itr = np.nditer(variables, flags=['multi_index'], op_flags=['readwrite'])
@@ -314,7 +314,7 @@ class BasicConvNet:
 if __name__ == '__main__':
     print("this is main")
 
-    np.random.seed(1)
+    np.random.seed(10)
 
     net = BasicConvNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
@@ -370,8 +370,8 @@ if __name__ == '__main__':
     print("batch_labels.shape: ", batch_labels.shape)
 
     # gradient
-    print("---------- gradient ----------")
-    gradient = net.gradients(batch_images, batch_labels)
+    # print("---------- gradient ----------")
+    # gradient = net.gradients(batch_images, batch_labels)
     # print(gradient)
 
     # # numerical gradient
