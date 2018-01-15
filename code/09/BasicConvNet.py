@@ -178,26 +178,26 @@ class BasicConvNet:
         SIGMA = 0.1
 
         self.params = {}
-        self.params['W1'] = np.random.randn(4, 4, 1, 2) * SIGMA
-        # self.params['b1'] = np.random.randn(2)
-        self.params['b1'] = np.zeros(2)
-        self.params['W2'] = np.random.randn(3, 3, 2, 4) * SIGMA
-        # self.params['b2'] = np.random.randn(4)
-        self.params['b2'] = np.zeros(4)
+        self.params['W1'] = np.random.randn(3, 3, 1, 16) * SIGMA
+        self.params['b1'] = np.zeros(16)
+        self.params['W2'] = np.random.randn(3, 3, 16, 16) * SIGMA
+        self.params['b2'] = np.zeros(16)
 
-        # self.params['W3'] = np.random.randn(6*6*4, 8) * SIGMA
-        self.params['W3'] = np.random.randn(3*3*4, 8) * SIGMA
-        self.params['b3'] = np.random.rand(8) * SIGMA
-        self.params['W4'] = np.random.randn(8, 10) * SIGMA
+        self.params['W3'] = np.random.randn(7*7*16, 16) * SIGMA
+        self.params['b3'] = np.random.rand(16) * SIGMA
+        self.params['W4'] = np.random.randn(16, 10) * SIGMA
         self.params['b4'] = np.random.rand(10) * SIGMA
 
     def init_layers(self):
         self.layers = OrderedDict()
-        self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
+        self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=1, padding=1)
         self.layers['Relu1'] = ReluLayer()
-        self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
-        self.layers['Relu2'] = ReluLayer()
         self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
+
+        self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=1, padding=1)
+        self.layers['Relu2'] = ReluLayer()
+        self.layers['MaxPooling2'] = MaxPoolingLayer(stride=2)
+
         self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.layers['Relu3'] = ReluLayer()
@@ -337,7 +337,7 @@ if __name__ == '__main__':
         'accuracy_test_itr': [],
     }
     
-    epochs = 5
+    epochs = 1
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
@@ -366,7 +366,6 @@ if __name__ == '__main__':
     # print("---------- gradient check ----------")
     # net.gradient_check(batch_images, batch_labels)
 
-    exit(0)
 
     itr = 0
     for epoch in range(epochs):
@@ -377,21 +376,23 @@ if __name__ == '__main__':
             batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
             batch_labels = train_labels[batch_mask]
 
-            if itr % 10 == 0:
+            if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr % 100 == 0:
+            if itr != 0 and itr % 100 == 0:
                 train_loss = net.loss(batch_images, batch_labels)
-                test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+                # test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+                test_loss = 0
                 print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
                 log['loss_train'].append(train_loss)
                 log['loss_train_itr'].append(itr)
                 log['loss_test'].append(test_loss)
                 log['loss_test_itr'].append(itr)
 
-            if itr % 100 == 0:
+            if itr != 0 and itr % 100 == 0:
                 train_acc = net.accuracy(batch_images, batch_labels)
-                test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+                # test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+                test_acc = 0
                 print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
                 log['accuracy_train'].append(train_acc)
                 log['accuracy_train_itr'].append(itr)
@@ -406,19 +407,22 @@ if __name__ == '__main__':
 
             itr += 1
 
-    print("Done!")
+    print("Done training!")
 
     # ==== End Training
     #
     # # print(log)
     # pickle.dump(log, open('log.pkl', "wb"))
     #
-    train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
-    test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
-    print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
 
-    train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
-    test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
-    print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
+    print("Calculating losses...")
+    # train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
+    # test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+    # print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
+
+    print("Calculating accuracy...")
+    # train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
+    # test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+    # print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
     #
     # net.save_params("params_6_epoch.pkl")
