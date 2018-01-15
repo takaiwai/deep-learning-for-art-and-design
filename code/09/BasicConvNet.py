@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import pickle
 from lib.MNIST import MNIST
-from lib.layers import DenseLayer, SigmoidLayer, SoftmaxCrossEntropyLayer
+from lib.layers import DenseLayer, SigmoidLayer, SoftmaxCrossEntropyLayer, ReluLayer
 from collections import OrderedDict
 
 class ConvolutionLayer:
@@ -126,9 +126,9 @@ class MaxPoolingLayer:
         return Y
 
     def backward(self, dY):
-        # print('=================== Max Pooling backward ===================')
-        # print("--------input dY: ", dY.shape)
-        # print(dY)
+        print('=================== Max Pooling backward ===================')
+        print("--------input dY: ", dY.shape)
+        print(dY)
         N_batch, H_in, W_in, C_in = self.X.shape
 
         H_out = H_in // self.stride
@@ -150,8 +150,8 @@ class MaxPoolingLayer:
                     dX_slice = X_slice_mask * current_dY
                     dX[n_batch, h_start:h_end, w_start:w_end, :] = dX_slice
 
-        # print("--------output dX: ", dX.shape)
-        # print(dX)
+        print("--------output dX: ", dX.shape)
+        print(dX)
         return dX
 
 class ReshapeLayer:
@@ -193,11 +193,13 @@ class BasicConvNet:
     def init_layers(self):
         self.layers = OrderedDict()
         self.layers['Convolution1'] = ConvolutionLayer(self.params['W1'], self.params['b1'], stride=2, padding=0)
+        self.layers['Relu1'] = ReluLayer()
         self.layers['Convolution2'] = ConvolutionLayer(self.params['W2'], self.params['b2'], stride=2, padding=0)
+        self.layers['Relu2'] = ReluLayer()
         self.layers['MaxPooling1'] = MaxPoolingLayer(stride=2)
         self.layers['Reshape1'] = ReshapeLayer()
         self.layers['Dense1'] = DenseLayer(self.params['W3'], self.params['b3'])
-        self.layers['Sigmoid1'] = SigmoidLayer()
+        self.layers['Relu3'] = ReluLayer()
         self.layers['Dense2'] = DenseLayer(self.params['W4'], self.params['b4'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -358,17 +360,17 @@ if __name__ == '__main__':
         net.gradient_descent(batch_images, batch_labels)
 
 
-    batch_mask = np.random.choice(train_size, 10)
+    batch_mask = np.random.choice(train_size, 1)
     # batch_mask = 42
     print(batch_mask)
-    batch_images = train_images[batch_mask].reshape(10, 28, 28, 1)
+    batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
     batch_labels = train_labels[batch_mask]
     print("batch_images.shape: ", batch_images.shape)
     print("batch_labels.shape: ", batch_labels.shape)
 
-    # # gradient
-    # print("---------- gradient ----------")
-    # gradient = net.gradients(batch_images, batch_labels)
+    # gradient
+    print("---------- gradient ----------")
+    gradient = net.gradients(batch_images, batch_labels)
     # print(gradient)
 
     # # numerical gradient
@@ -376,8 +378,8 @@ if __name__ == '__main__':
     # gradient = net.numerical_gradients(batch_images, batch_labels)
     # print(gradient)
 
-    print("---------- gradient check ----------")
-    net.gradient_check(batch_images, batch_labels)
+    # print("---------- gradient check ----------")
+    # net.gradient_check(batch_images, batch_labels)
 
 
     # itr = 0
