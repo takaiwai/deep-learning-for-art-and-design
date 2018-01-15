@@ -126,9 +126,6 @@ class MaxPoolingLayer:
         return Y
 
     def backward(self, dY):
-        # print('=================== Max Pooling backward ===================')
-        # print("--------input dY: ", dY.shape)
-        # print(dY)
         N_batch, H_in, W_in, C_in = self.X.shape
 
         H_out = H_in // self.stride
@@ -144,14 +141,18 @@ class MaxPoolingLayer:
                     w_start = w * self.stride
                     w_end = w_start + self.stride
 
-                    X_slice = self.X[n_batch, h_start:h_end, w_start:w_end, :]
-                    X_slice_mask = X_slice == np.max(X_slice, axis=(0, 1))
                     current_dY = dY[n_batch, h, w, :]
-                    dX_slice = X_slice_mask * current_dY
-                    dX[n_batch, h_start:h_end, w_start:w_end, :] = dX_slice
 
-        # print("--------output dX: ", dX.shape)
-        # print(dX)
+                    X_slice = self.X[n_batch, h_start:h_end, w_start:w_end, :]
+                    flat_X_slice_by_channel = X_slice.transpose(2, 0, 1).reshape(C_in, -1)
+                    max_index = np.argmax(flat_X_slice_by_channel, axis=1)
+
+                    gradient = np.zeros_like(flat_X_slice_by_channel)
+                    gradient[np.arange(C_in), max_index] = current_dY
+                    gradient = gradient.reshape(X_slice.shape[2], X_slice.shape[0], X_slice.shape[1]).transpose(1, 2, 0)
+
+                    dX[n_batch, h_start:h_end, w_start:w_end, :] = gradient
+
         return dX
 
 class ReshapeLayer:
@@ -313,7 +314,7 @@ class BasicConvNet:
 if __name__ == '__main__':
     print("this is main")
 
-    np.random.seed(10)
+    np.random.seed(1)
 
     net = BasicConvNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
