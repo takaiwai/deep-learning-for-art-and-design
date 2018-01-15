@@ -354,85 +354,71 @@ if __name__ == '__main__':
     print("train_loss: ", train_loss)
 
 
-    for _ in range(10):
-        batch_mask = np.random.choice(train_size, 100)
-        batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
-        batch_labels = train_labels[batch_mask]
-        net.gradient_descent(batch_images, batch_labels)
-
-
-    batch_mask = np.random.choice(train_size, 1)
-    # batch_mask = 42
-    print(batch_mask)
-    batch_images = train_images[batch_mask].reshape(1, 28, 28, 1)
-    batch_labels = train_labels[batch_mask]
-    print("batch_images.shape: ", batch_images.shape)
-    print("batch_labels.shape: ", batch_labels.shape)
-
-    # gradient
-    # print("---------- gradient ----------")
-    # gradient = net.gradients(batch_images, batch_labels)
-    # print(gradient)
+    print("---------- gradient ----------")
+    gradient = net.gradients(batch_images, batch_labels)
+    print(gradient)
 
     # # numerical gradient
     # print("---------- numerical gradient ----------")
     # gradient = net.numerical_gradients(batch_images, batch_labels)
     # print(gradient)
 
-    print("---------- gradient check ----------")
-    net.gradient_check(batch_images, batch_labels)
+    # print("---------- gradient check ----------")
+    # net.gradient_check(batch_images, batch_labels)
 
+    exit(0)
 
-    # itr = 0
-    # for epoch in range(epochs):
-    #     print("========== Epoch {} ==========".format(epoch))
-    #
-    #     for _ in range(iteration_per_epoch):
-    #         batch_mask = np.random.choice(train_size, batch_size)
-    #         batch_images = train_images[batch_mask]
-    #         batch_labels = train_labels[batch_mask]
-    #
-    #         if itr % 100 == 0:
-    #             print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
-    #
-    #         if itr % 100 == 0:
-    #             train_loss = net.loss(batch_images, batch_labels)
-    #             test_loss = net.loss(test_images, test_labels)
-    #             print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
-    #             log['loss_train'].append(train_loss)
-    #             log['loss_train_itr'].append(itr)
-    #             log['loss_test'].append(test_loss)
-    #             log['loss_test_itr'].append(itr)
-    #
-    #         if itr % 100 == 0:
-    #             train_acc = net.accuracy(batch_images, batch_labels)
-    #             test_acc = net.accuracy(test_images, test_labels)
-    #             print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
-    #             log['accuracy_train'].append(train_acc)
-    #             log['accuracy_train_itr'].append(itr)
-    #             log['accuracy_test'].append(test_acc)
-    #             log['accuracy_test_itr'].append(itr)
-    #
-    #         # if itr % 100 == 0:
-    #         #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-    #         #     fast_basic_net.save_params(pickle_filename)
-    #
-    #         net.gradient_descent(batch_images, batch_labels)
-    #
-    #         itr += 1
-    #
-    # print("Done!")
-    # # ==== End Training
+    itr = 0
+    for epoch in range(epochs):
+        print("========== Epoch {} ==========".format(epoch))
+
+        for _ in range(iteration_per_epoch):
+            batch_mask = np.random.choice(train_size, batch_size)
+            batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+            batch_labels = train_labels[batch_mask]
+
+            if itr % 10 == 0:
+                print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
+
+            if itr % 100 == 0:
+                train_loss = net.loss(batch_images, batch_labels)
+                test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+                print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
+                log['loss_train'].append(train_loss)
+                log['loss_train_itr'].append(itr)
+                log['loss_test'].append(test_loss)
+                log['loss_test_itr'].append(itr)
+
+            if itr % 100 == 0:
+                train_acc = net.accuracy(batch_images, batch_labels)
+                test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+                print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
+                log['accuracy_train'].append(train_acc)
+                log['accuracy_train_itr'].append(itr)
+                log['accuracy_test'].append(test_acc)
+                log['accuracy_test_itr'].append(itr)
+
+            # if itr % 100 == 0:
+            #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
+            #     fast_basic_net.save_params(pickle_filename)
+
+            net.gradient_descent(batch_images, batch_labels)
+
+            itr += 1
+
+    print("Done!")
+
+    # ==== End Training
     #
     # # print(log)
     # pickle.dump(log, open('log.pkl', "wb"))
     #
-    # train_loss = net.loss(train_images, train_labels)
-    # test_loss = net.loss(test_images, test_labels)
-    # print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
-    #
-    # train_acc = net.accuracy(train_images, train_labels)
-    # test_acc = net.accuracy(test_images, test_labels)
-    # print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
+    train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
+    test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
+    print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
+
+    train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
+    test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+    print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
     #
     # net.save_params("params_6_epoch.pkl")
