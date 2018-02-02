@@ -269,7 +269,6 @@ if __name__ == '__main__':
     print("Done!")
     # ==== End Training
 
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'overfitting_log.pkl'), "wb"))
 
 
     train_loss = fast_basic_net.loss(train_images, train_labels)
@@ -282,3 +281,5 @@ if __name__ == '__main__':
 
     log['accuracy_train'] = train_acc
     log['accuracy_test'] = test_acc
+
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'overfitting_log.pkl'), "wb"))
