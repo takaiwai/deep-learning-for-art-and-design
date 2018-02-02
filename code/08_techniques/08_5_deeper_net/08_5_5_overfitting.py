@@ -238,7 +238,7 @@ if __name__ == '__main__':
         'accuracy_test': 0,
     }
     
-    epochs = 20
+    epochs = 200
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
