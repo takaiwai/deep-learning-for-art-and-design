@@ -226,8 +226,8 @@ if __name__ == '__main__':
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
 
     print("train_images, train_labels: ", train_images.shape, train_labels.shape)
-    train_images = train_images[:2000, :]
-    train_labels = train_labels[:2000]
+    train_images = train_images[:1500, :]
+    train_labels = train_labels[:1500]
 
     print("train_images, train_labels: ", train_images.shape, train_labels.shape)
 
@@ -277,4 +277,4 @@ if __name__ == '__main__':
     log['accuracy_test_itr'].append(itr)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'overfitting_log.pkl'), "wb"))
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), '08_6_1_overfitting_log.pkl'), "wb"))
