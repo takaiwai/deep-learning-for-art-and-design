@@ -56,7 +56,7 @@ class L2RegularizationNet:
 
         self.optimizer = AdamOptimizer(self.params, 0.001)
 
-        self.l2_lambda = 0.1
+        self.l2_lambda = 0.001
 
     def init_params(self):
         self.params['W1'] = np.random.randn(28*28, 500) * he(28*28)
@@ -162,6 +162,7 @@ class L2RegularizationNet:
 
         gradients = {}
         for param_name in list(self.params.keys()):
+            print("calculating: ", param_name)
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
         return gradients
@@ -231,7 +232,8 @@ if __name__ == '__main__':
         'accuracy_test_itr': []
     }
     
-    epochs = 50
+    # epochs = 50
+    epochs = 1
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
@@ -257,7 +259,7 @@ if __name__ == '__main__':
             fast_basic_net.gradient_descent(batch_images, batch_labels)
             itr += 1
 
-    # fast_basic_net.gradient_check(train_images[:1, :], train_labels[:1])
+    fast_basic_net.gradient_check(train_images[:1, :], train_labels[:1])
 
     print("Done!")
 
