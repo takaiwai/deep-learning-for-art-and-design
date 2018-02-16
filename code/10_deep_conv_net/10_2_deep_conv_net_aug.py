@@ -268,11 +268,11 @@ if __name__ == '__main__':
     total_iterations = iteration_per_epoch * epochs
 
     log = {
-        'train_acc': 0,
         'test_acc': 0,
         'iterations': [],
         'accuracy': []
     }
+    test_acc = 0
 
     itr = 0
     for epoch in range(epochs):
@@ -282,39 +282,31 @@ if __name__ == '__main__':
             if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr > 0 and itr % 200 == 0:
-                print("[Test Accuracy] Calculating...")
-                test_acc = net.accuracy(test_images / 255.0, test_labels)
-                log['iterations'].append(itr)
-                log['accuracy'].append(test_acc)
-                print("[Test Accuracy] test: {}".format(test_acc))
-
             net.is_training = True
 
             batch_mask = np.random.choice(train_size, batch_size)
-
             batch_images = train_images[batch_mask]
             transformed_images = []
             for i in range(batch_size):
                 img = random_translate(batch_images[i, :])
                 transformed_images.append(img)
             transformed_images = np.array(transformed_images)
-
             batch_labels = train_labels[batch_mask]
-
             net.gradient_descent(transformed_images, batch_labels)
+
             net.is_training = False
 
             itr += 1
 
+        print("[Test Accuracy] Calculating...")
+        test_acc = net.accuracy(test_images / 255.0, test_labels)
+        log['iterations'].append(itr)
+        log['accuracy'].append(test_acc)
+        print("[Test Accuracy] test: {}".format(test_acc))
+
 
     print("Done!")
 
-    train_acc = net.accuracy(train_images / 255.0, train_labels)
-    test_acc = net.accuracy(test_images / 255.0, test_labels)
-    print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
-
-    log['train_acc'] = train_acc
     log['test_acc'] = test_acc
 
     pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_solo_{}_log.pkl'.format(index)), "wb"))
