@@ -49,6 +49,160 @@ class DenseLayer():
         dX, self.dW = self.mat_mul_layer.backward(dY)
         return dX
 
+class ConvolutionLayer:
+    def __init__(self, W, b, padding=0, stride=1):
+        self.W = W
+        self.b = b
+        self.padding = padding
+        self.stride = stride
+
+        self.X = None
+        self.X_col = None
+        self.W_col = None
+
+        self.dW = None
+        self.db = None
+
+    def forward(self, X):
+        self.X = X
+        N_batch, H_in, W_in, C_in = X.shape
+        H_filter, W_filter, C_in, C_out = self.W.shape
+
+        H_out = (H_in + 2 * self.padding - H_filter) // self.stride + 1
+        W_out = (W_in + 2 * self.padding - W_filter) // self.stride + 1
+
+        if self.padding > 0:
+            X = np.pad(X, ((0, 0), (self.padding, self.padding), (self.padding, self.padding), (0, 0)), 'constant')
+
+        X_col = np.zeros((N_batch * H_out * W_out, H_filter * W_filter * C_in))
+        X_col_row_index = 0
+        for n_batch in range(N_batch):  # TODO: Maybe I can remove this loop over N_batch?
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + H_filter
+                    w_start = w * self.stride
+                    w_end = w_start + W_filter
+
+                    X_slice = X[n_batch, h_start:h_end, w_start:w_end, :].transpose(2, 0, 1)
+                    X_col[X_col_row_index, :] = X_slice.reshape(1, -1)
+                    X_col_row_index += 1  # X_col_row_index = n_batch * (H_out * W_out) + h * W_out + w
+
+        W_col = self.W.transpose(2, 0, 1, 3).reshape(-1, C_out)
+
+        Y_col = np.dot(X_col, W_col)
+        Y = Y_col.reshape(N_batch, H_out, W_out, C_out) + self.b
+
+        self.X_col = X_col
+        self.W_col = W_col
+
+        return Y
+
+    def backward(self, dY):
+        N_batch, H_in, W_in, C_in = self.X.shape
+        H_filter, W_filter, _, C_out = self.W.shape
+        _, H_out, W_out, _ = dY.shape
+
+        # dY
+        dY_col = dY.reshape(-1, C_out)
+
+        # db
+        db = np.sum(dY, axis=(0, 1, 2))
+
+        # dW
+        dW_col = np.dot(self.X_col.T, dY_col)
+        dW = dW_col.reshape(C_in, H_filter, W_filter, C_out).transpose(1, 2, 0, 3)
+
+        # dX
+        dX_col = np.dot(dY_col, self.W_col.T)
+        dX = np.zeros((N_batch, H_in + 2 * self.padding, W_in + 2 * self.padding, C_in))
+        dX_col_row_index = 0
+        for n_batch in range(N_batch):
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + H_filter
+                    w_start = w * self.stride
+                    w_end = w_start + W_filter
+
+                    dX_col_slice = dX_col[dX_col_row_index, :].reshape(C_in, H_filter, W_filter).transpose(1, 2, 0)
+                    dX[n_batch, h_start:h_end, w_start:w_end, :] += dX_col_slice
+                    dX_col_row_index += 1  # dX_col_row_index = n_batch * (H_out * W_out) + h * W_out + w
+
+        if self.padding > 0:
+            dX = dX[:, self.padding:-self.padding, self.padding:-self.padding, :]
+
+        self.dW = dW
+        self.db = db
+
+        return dX
+
+class MaxPoolingLayer:
+    def __init__(self, stride):
+        self.stride = stride
+        self.X = None
+
+    def forward(self, X):
+        N_batch, H_in, W_in, C_in = X.shape
+
+        H_out = H_in // self.stride
+        W_out = W_in // self.stride
+
+        Y = np.zeros((N_batch, H_out, W_out, C_in))
+        for h in range(H_out):
+            h_start = h * self.stride
+            h_end = h_start + self.stride
+            for w in range(W_out):
+                w_start = w * self.stride
+                w_end = w_start + self.stride
+                X_slice = X[:, h_start:h_end, w_start:w_end, :]
+                Y[:, h, w, :] = np.max(X_slice, axis=(1, 2))
+
+        self.X = X
+
+        return Y
+
+    def backward(self, dY):
+        N_batch, H_in, W_in, C_in = self.X.shape
+
+        H_out = H_in // self.stride
+        W_out = W_in // self.stride
+
+        dX = np.zeros_like(self.X)
+
+        for n_batch in range(N_batch):
+            for h in range(H_out):
+                for w in range(W_out):
+                    h_start = h * self.stride
+                    h_end = h_start + self.stride
+                    w_start = w * self.stride
+                    w_end = w_start + self.stride
+
+                    current_dY = dY[n_batch, h, w, :]
+
+                    X_slice = self.X[n_batch, h_start:h_end, w_start:w_end, :]
+                    flat_X_slice_by_channel = X_slice.transpose(2, 0, 1).reshape(C_in, -1)
+                    max_index = np.argmax(flat_X_slice_by_channel, axis=1)
+
+                    gradient = np.zeros_like(flat_X_slice_by_channel)
+                    gradient[np.arange(C_in), max_index] = current_dY
+                    gradient = gradient.reshape(X_slice.shape[2], X_slice.shape[0], X_slice.shape[1]).transpose(1, 2, 0)
+
+                    dX[n_batch, h_start:h_end, w_start:w_end, :] = gradient
+
+        return dX
+
+class FlattenLayer:
+    def __init__(self):
+        self.input_shape = None
+
+    def forward(self, X):
+        self.input_shape = X.shape
+        return X.reshape(self.input_shape[0], -1)
+
+    def backward(self, dY):
+        return dY.reshape(self.input_shape)
+
 
 class SigmoidLayer():
     def __init__(self):
