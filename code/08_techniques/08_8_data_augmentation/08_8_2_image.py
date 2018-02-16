@@ -215,10 +215,26 @@ class OverfittingNet:
             print("gradient {}: {} ({})".format(key, result, check))
 
 
+def random_translate(mnist_data):
+    data = mnist_data.reshape(28, 28).astype(np.uint8)
+    rotation = np.random.randint(-15, 15)
+    x = np.random.randint(-2, 2)
+    y = np.random.randint(-2, 2)
+    matrix = [
+        1, 0, x,
+        0, 1, y,
+        0, 0]
+    image = Image.fromarray(data, 'L').rotate(rotation, resample=Image.BICUBIC)
+    image = image.transform((28, 28), Image.AFFINE, matrix, resample=Image.BICUBIC)
+    # image.show()
+
+    bytes = np.frombuffer(image.tobytes(), dtype=np.uint8).astype(np.float32) / 255.0
+    # print(bytes)
+    return bytes
+
 if __name__ == '__main__':
     print("this is main")
 
-    np.random.seed(1229)
 
     fast_basic_net = OverfittingNet()
     # fast_basic_net.load_params('params_after_5_epochs.pkl')
@@ -230,37 +246,13 @@ if __name__ == '__main__':
     train_images = train_images[:1500, :]
     train_labels = train_labels[:1500]
 
-    data = train_images[5].reshape(28, 28).astype(np.uint8)
-    image = Image.fromarray(data, 'L')
-    image.show()
+    # for _ in range(1):
+    #     index = np.random.randint(0, 1499)
+    #     random_translate(train_images[index, :])
 
-    data = train_images[5].reshape(28, 28).astype(np.uint8)
-    image = Image.fromarray(data, 'L').rotate(15, resample=Image.BICUBIC)
-    image.show()
-
-    data = train_images[5].reshape(28, 28).astype(np.uint8)
-    image = Image.fromarray(data, 'L').rotate(-15, resample=Image.BICUBIC)
-    image.show()
-
-    data = train_images[5].reshape(28, 28).astype(np.uint8)
-    matrix = [
-        1, 0, 4,
-        0, 1, 4,
-        0, 0]
-    image = Image.fromarray(data, 'L').transform((28, 28), Image.AFFINE, matrix, resample=Image.BICUBIC)
-    image.show()
-
-    data = train_images[5].reshape(28, 28).astype(np.uint8)
-    matrix = [
-        1, 0, -4,
-        0, 1, -4,
-        0, 0]
-    image = Image.fromarray(data, 'L').transform((28, 28), Image.AFFINE, matrix, resample=Image.BICUBIC)
-    image.show()
 
     print("train_images, train_labels: ", train_images.shape, train_labels.shape)
 
-    exit(0)
 
 
     # ==== Training
@@ -281,8 +273,8 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         print("Epoch: {}".format(epoch))
 
-        train_acc = fast_basic_net.accuracy(train_images, train_labels)
-        test_acc = fast_basic_net.accuracy(test_images, test_labels)
+        train_acc = fast_basic_net.accuracy(train_images / 255.0, train_labels)
+        test_acc = fast_basic_net.accuracy(test_images / 255.0, test_labels)
         log['accuracy_train'].append(train_acc)
         log['accuracy_train_itr'].append(itr)
         log['accuracy_test'].append(test_acc)
@@ -290,22 +282,35 @@ if __name__ == '__main__':
         print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
         for _ in range(iteration_per_epoch):
+            # # As-is
+            # batch_mask = np.random.choice(train_size, batch_size)
+            # batch_images = train_images[batch_mask] / 255.0
+            # batch_labels = train_labels[batch_mask]
+            # fast_basic_net.gradient_descent(batch_images, batch_labels)
+
+            # Augmented
             batch_mask = np.random.choice(train_size, batch_size)
+
             batch_images = train_images[batch_mask]
+            transformed_images = []
+            for i in range(batch_size):
+                img = random_translate(batch_images[i, :])
+                transformed_images.append(img)
+            transformed_images = np.array(transformed_images)
+
             batch_labels = train_labels[batch_mask]
 
-            fast_basic_net.gradient_descent(batch_images, batch_labels)
+            fast_basic_net.gradient_descent(transformed_images, batch_labels)
             itr += 1
-
 
     print("Done!")
 
-    train_acc = fast_basic_net.accuracy(train_images, train_labels)
-    test_acc = fast_basic_net.accuracy(test_images, test_labels)
+    train_acc = fast_basic_net.accuracy(train_images / 255.0, train_labels)
+    test_acc = fast_basic_net.accuracy(test_images / 255.0, test_labels)
     log['accuracy_train'].append(train_acc)
     log['accuracy_train_itr'].append(itr)
     log['accuracy_test'].append(test_acc)
     log['accuracy_test_itr'].append(itr)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), '08_8_1_overfitting_log.pkl'), "wb"))
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), '08_8_2_augmentation_log.pkl'), "wb"))
