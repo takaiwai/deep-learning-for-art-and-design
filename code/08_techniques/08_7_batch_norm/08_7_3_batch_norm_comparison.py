@@ -221,7 +221,6 @@ class BatchNormNet:
             print("gradient {}: {} ({})".format(key, result, check))
 
 def experiment(weight_stddev, uses_batch_norm, experiment_num):
-    np.random.seed(1229)
     batch_norm_net = BatchNormNet(weight_stddev, uses_batch_norm, experiment_num)
 
     mnist = MNIST()
@@ -283,8 +282,9 @@ def experiment(weight_stddev, uses_batch_norm, experiment_num):
 
 if __name__ == '__main__':
     print("this is main")
+    np.random.seed(1229)
 
-    for i in range(2):
+    for i in range(16):
         r = -4 * np.random.rand()
         weight_stddev = 10 ** r
         print("======== stddev: ", weight_stddev)
