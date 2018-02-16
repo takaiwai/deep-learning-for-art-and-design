@@ -248,6 +248,14 @@ def random_translate(mnist_data):
 
 if __name__ == '__main__':
 
+    len_arg = len(sys.argv)
+    print("len_arg: ", len_arg)
+
+    index = 0
+    if len_arg == 1:
+        index = int(sys.argv[0])
+    print("index: ", index)
+
     net = DeepConvNet()
 
     mnist = MNIST()
@@ -309,7 +317,6 @@ if __name__ == '__main__':
     log['train_acc'] = train_acc
     log['test_acc'] = test_acc
 
-    i = 0
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_solo_{}_log.pkl'.format(i)), "wb"))
-    net.save_params('deep_conv_solo_{}_params.pkl'.format(i))
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_solo_{}_log.pkl'.format(index)), "wb"))
+    net.save_params('deep_conv_solo_{}_params.pkl'.format(index))
 
