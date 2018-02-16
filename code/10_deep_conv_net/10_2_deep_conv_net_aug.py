@@ -143,6 +143,12 @@ class DeepConvNet:
         T_index = np.argmax(T, axis=1)
         return np.mean(Z_index == T_index)
 
+    def accuracy_count(self, X, T):
+        Z = self.predict(X)
+        Z_index = np.argmax(Z, axis=1)
+        T_index = np.argmax(T, axis=1)
+        return np.sum(Z_index == T_index)
+
     def gradient_descent(self, X, T):
         grads = self.gradients(X, T)
         self.optimizer.update(self.params, grads)
@@ -299,7 +305,14 @@ if __name__ == '__main__':
             itr += 1
 
         print("[Test Accuracy] Calculating...")
-        test_acc = net.accuracy(test_images / 255.0, test_labels)
+        correct_prediction = 0
+        for batch in range(test_images.shape[0] // batch_size):
+            index_start = batch * batch_size
+            index_end = (batch+1) * batch_size
+            t_image = test_images[index_start:index_end, :, :, :] / 255.0
+            t_label = test_labels[index_start:index_end]
+            correct_prediction += net.accuracy_count(t_image, t_label)
+        test_acc = correct_prediction / test_images.shape[0]
         log['iterations'].append(itr)
         log['accuracy'].append(test_acc)
         print("[Test Accuracy] test: {}".format(test_acc))
