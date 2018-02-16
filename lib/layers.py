@@ -148,9 +148,9 @@ class BatchNormLayer:
         dxmu2 = 2 * x_mu * dsq
 
         dx1 = (dx_mu1 + dxmu2)
-        dmu = -1 * np.sum(dx_mu1+dxmu2, axis=0)
+        dmu = -1 * np.sum(dx_mu1 + dxmu2, axis=0)
 
-        dx2 = -1 / N * np.ones((N, D)) * dmu
+        dx2 = 1.0 / N * np.ones((N, D)) * dmu
 
         dx = dx1 + dx2
 

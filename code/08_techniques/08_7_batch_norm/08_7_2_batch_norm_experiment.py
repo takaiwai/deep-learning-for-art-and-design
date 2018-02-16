@@ -20,20 +20,35 @@ class SevenLayerNet:
     def init_params(self):
         self.params = {}
         self.params['W1'] = np.random.randn(28*28, 64) * he(28*28)
-        self.params['b1'] = np.zeros(64)
+        self.params['b1'] = np.random.randn(64) * he(28*28)
         self.params['gamma1'] = np.ones(64)
         self.params['beta1'] = np.zeros(64)
 
         self.params['W2'] = np.random.randn(64, 50) * he(64)
-        self.params['b2'] = np.zeros(50)
+        self.params['b2'] = np.random.randn(50) * he(64)
+        self.params['gamma2'] = np.ones(50)
+        self.params['beta2'] = np.zeros(50)
+
         self.params['W3'] = np.random.randn(50, 40) * he(50)
         self.params['b3'] = np.zeros(40)
+        self.params['gamma3'] = np.ones(40)
+        self.params['beta3'] = np.zeros(40)
+        
         self.params['W4'] = np.random.randn(40, 30) * he(40)
         self.params['b4'] = np.zeros(30)
+        self.params['gamma4'] = np.ones(30)
+        self.params['beta4'] = np.zeros(30)
+        
         self.params['W5'] = np.random.randn(30, 30) * he(30)
         self.params['b5'] = np.zeros(30)
+        self.params['gamma5'] = np.ones(30)
+        self.params['beta5'] = np.zeros(30)
+        
         self.params['W6'] = np.random.randn(30, 30) * he(30)
         self.params['b6'] = np.zeros(30)
+        self.params['gamma6'] = np.ones(30)
+        self.params['beta6'] = np.zeros(30)
+        
         self.params['W7'] = np.random.randn(30, 10) * he(30)
         self.params['b7'] = np.zeros(10)
 
@@ -44,15 +59,25 @@ class SevenLayerNet:
         self.layers['Relu1'] = SigmoidLayer()
 
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
+        self.layers['BatchNorm2'] = BatchNormLayer(self.params['gamma2'], self.params['beta2'])
         self.layers['Relu2'] = SigmoidLayer()
+
         self.layers['Dense3'] = DenseLayer(self.params['W3'], self.params['b3'])
+        self.layers['BatchNorm3'] = BatchNormLayer(self.params['gamma3'], self.params['beta3'])
         self.layers['Relu3'] = SigmoidLayer()
+        
         self.layers['Dense4'] = DenseLayer(self.params['W4'], self.params['b4'])
+        self.layers['BatchNorm4'] = BatchNormLayer(self.params['gamma4'], self.params['beta4'])
         self.layers['Relu4'] = SigmoidLayer()
+        
         self.layers['Dense5'] = DenseLayer(self.params['W5'], self.params['b5'])
+        self.layers['BatchNorm5'] = BatchNormLayer(self.params['gamma5'], self.params['beta5'])
         self.layers['Relu5'] = SigmoidLayer()
+        
         self.layers['Dense6'] = DenseLayer(self.params['W6'], self.params['b6'])
+        self.layers['BatchNorm6'] = BatchNormLayer(self.params['gamma6'], self.params['beta6'])
         self.layers['Relu6'] = SigmoidLayer()
+        
         self.layers['Dense7'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -107,14 +132,29 @@ class SevenLayerNet:
 
         gradients['W2'] = self.layers['Dense2'].dW
         gradients['b2'] = self.layers['Dense2'].db
+        gradients['gamma2'] = self.layers['BatchNorm2'].dgamma
+        gradients['beta2'] = self.layers['BatchNorm2'].dbeta
+
         gradients['W3'] = self.layers['Dense3'].dW
         gradients['b3'] = self.layers['Dense3'].db
+        gradients['gamma3'] = self.layers['BatchNorm3'].dgamma
+        gradients['beta3'] = self.layers['BatchNorm3'].dbeta
+        
         gradients['W4'] = self.layers['Dense4'].dW
         gradients['b4'] = self.layers['Dense4'].db
+        gradients['gamma4'] = self.layers['BatchNorm4'].dgamma
+        gradients['beta4'] = self.layers['BatchNorm4'].dbeta
+        
         gradients['W5'] = self.layers['Dense5'].dW
         gradients['b5'] = self.layers['Dense5'].db
+        gradients['gamma5'] = self.layers['BatchNorm5'].dgamma
+        gradients['beta5'] = self.layers['BatchNorm5'].dbeta
+        
         gradients['W6'] = self.layers['Dense6'].dW
         gradients['b6'] = self.layers['Dense6'].db
+        gradients['gamma6'] = self.layers['BatchNorm6'].dgamma
+        gradients['beta6'] = self.layers['BatchNorm6'].dbeta
+        
         gradients['W7'] = self.layers['Dense7'].dW
         gradients['b7'] = self.layers['Dense7'].db
 
@@ -167,6 +207,9 @@ class SevenLayerNet:
             else:
                 result = 'NG'
 
+            print("========== {}".format(key))
+            print(diff)
+            print(prop)
             print("gradient {}: {} ({})".format(key, result, check))
 
 
@@ -192,7 +235,7 @@ if __name__ == '__main__':
         'accuracy_test_itr': []
     }
     
-    epochs = 1
+    epochs = 0
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
