@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import pickle
 from lib.MNIST import MNIST
-from lib.layers import DenseLayer, ConvolutionLayer, MaxPoolingLayer, FlattenLayer
+from lib.layers import DenseLayer, ConvolutionLayer, MaxPoolingLayer, FlattenLayer, DropoutLayer, BatchNormLayer
 from lib.layers import ReluLayer, SoftmaxCrossEntropyLayer
 from collections import OrderedDict
 
@@ -56,6 +56,7 @@ class DeepConvNet:
         self.init_layers()
 
         self.optimizer = AdamOptimizer(self.params, 0.001)
+        self.is_training = False
 
     def init_params(self):
         self.params = {}
@@ -71,9 +72,15 @@ class DeepConvNet:
 
         self.params['W5'] = np.random.randn(7*7*32, 256) * he(7*7*32)
         self.params['b5'] = np.zeros(256)
-        self.params['W6'] = np.random.randn(256, 256) * he(256)
-        self.params['b6'] = np.zeros(256)
-        self.params['W7'] = np.random.randn(256, 10) * he(256)
+        self.params['gamma1'] = np.ones(256)
+        self.params['beta1'] = np.zeros(256)
+
+        self.params['W6'] = np.random.randn(256, 128) * he(256)
+        self.params['b6'] = np.zeros(128)
+        self.params['gamma2'] = np.ones(128)
+        self.params['beta2'] = np.zeros(128)
+
+        self.params['W7'] = np.random.randn(128, 10) * he(128)
         self.params['b7'] = np.zeros(10)
 
     def init_layers(self):
@@ -92,9 +99,15 @@ class DeepConvNet:
         self.layers['Reshape'] = FlattenLayer()
 
         self.layers['Dense1'] = DenseLayer(self.params['W5'], self.params['b5'])
+        self.layers['BatchNorm1'] = BatchNormLayer(self.params['gamma1'], self.params['beta1'])
         self.layers['Relu5'] = ReluLayer()
+        self.layers['Dropout1'] = DropoutLayer(num_neurons=256, keep_prob=0.5)
+
         self.layers['Dense2'] = DenseLayer(self.params['W6'], self.params['b6'])
+        self.layers['BatchNorm2'] = BatchNormLayer(self.params['gamma2'], self.params['beta2'])
         self.layers['Relu6'] = ReluLayer()
+        self.layers['Dropout2'] = DropoutLayer(num_neurons=128, keep_prob=0.5)
+
         self.layers['Dense3'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -110,8 +123,12 @@ class DeepConvNet:
 
     def predict(self, X):
         out = X
-        for layer in self.layers.values():
-            out = layer.forward(out)
+        for name, layer in self.layers.items():
+            if name.startswith('Dropout'):
+                out = layer.forward(out, is_training=self.is_training)
+            else:
+                out = layer.forward(out)
+
         return out
 
     def loss(self, X, T):
@@ -155,6 +172,11 @@ class DeepConvNet:
         gradients['b6'] = self.layers['Dense2'].db
         gradients['W7'] = self.layers['Dense3'].dW
         gradients['b7'] = self.layers['Dense3'].db
+
+        gradients['gamma1'] = self.layers['BatchNorm1'].dgamma
+        gradients['beta1'] = self.layers['BatchNorm1'].dbeta
+        gradients['gamma2'] = self.layers['BatchNorm2'].dgamma
+        gradients['beta2'] = self.layers['BatchNorm2'].dbeta
 
         return gradients
 
@@ -236,17 +258,19 @@ if __name__ == '__main__':
             if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr % 200 == 0:
+            if itr > 0 and itr % 200 == 0:
                 print("[Test Accuracy] Calculating...")
                 test_acc = net.accuracy(test_images, test_labels)
                 log['iterations'].append(itr)
                 log['accuracy'].append(test_acc)
                 print("[Test Accuracy] test: {}".format(test_acc))
 
+            net.is_training = True
             batch_mask = np.random.choice(train_size, batch_size)
             batch_images = train_images[batch_mask]
             batch_labels = train_labels[batch_mask]
             net.gradient_descent(batch_images, batch_labels)
+            net.is_training = False
 
             itr += 1
 
