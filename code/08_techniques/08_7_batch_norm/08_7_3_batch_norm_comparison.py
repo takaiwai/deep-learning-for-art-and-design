@@ -255,7 +255,7 @@ if __name__ == '__main__':
     np.random.seed(1229)
 
     for i in range(16):
-        r = -3 * np.random.rand()
+        r = -2 * np.random.rand()
         weight_stddev = 10 ** r
         print("======== stddev: ", weight_stddev)
         experiment(weight_stddev, True, i)
