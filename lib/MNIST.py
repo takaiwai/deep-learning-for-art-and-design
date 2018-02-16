@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import os.path
 from urllib import request
 import gzip
@@ -42,12 +41,6 @@ class MNIST:
             test_images = test_images.reshape(-1, 28, 28, 1)
 
         return train_images, train_labels, test_images, test_labels
-
-    def show(self, image, label):
-        print("Digit: {}, Raw Label: {}".format(np.argmax(label), label))
-        plt.gray()
-        plt.imshow(image.reshape(28,28))
-        plt.show()
 
 
     def load_pickle(self):
