@@ -336,15 +336,10 @@ if __name__ == '__main__':
     np.random.seed(10)
 
     net = BasicConvNet()
-    net.load_params("BasicConvNet_params_3_epoch.pkl")
 
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
 
-    # batch_images = train_images[:20]
-    # batch_labels = train_labels[:20]
-
-    # ==== Training
     log = {
         'loss_train': [],
         'loss_train_itr': [],
@@ -362,28 +357,6 @@ if __name__ == '__main__':
     iteration_per_epoch = train_size // batch_size
     total_iterations = iteration_per_epoch * epochs
 
-    # Test loss
-    batch_mask = np.random.choice(train_size, 100)
-    print(batch_mask)
-    batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
-    batch_labels = train_labels[batch_mask]
-    # print("batch_images.shape: ", batch_images.shape)
-    # print("batch_labels.shape: ", batch_labels.shape)
-    train_loss = net.loss(batch_images, batch_labels)
-    print("train_loss: ", train_loss)
-
-
-    print("---------- gradient ----------")
-    gradient = net.gradients(batch_images, batch_labels)
-    # print(gradient)
-
-    # # numerical gradient
-    # print("---------- numerical gradient ----------")
-    # gradient = net.numerical_gradients(batch_images, batch_labels)
-    # print(gradient)
-
-    # print("---------- gradient check ----------")
-    # net.gradient_check(batch_images, batch_labels)
 
     itr = 0
     for epoch in range(epochs):
@@ -442,4 +415,3 @@ if __name__ == '__main__':
     test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    net.save_params("BasicConvNet_params_10_epoch.pkl")
