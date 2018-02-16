@@ -8,35 +8,73 @@ from lib.layers import DenseLayer, ConvolutionLayer, MaxPoolingLayer, FlattenLay
 from lib.layers import ReluLayer, SoftmaxCrossEntropyLayer
 from collections import OrderedDict
 
+def he(n_in):
+    return np.sqrt(2 / n_in)
+
+class AdamOptimizer:
+    def __init__(self, params, ETA=0.001, BETA1 = 0.9, BETA2 = 0.999, EPSILON = 1e-8):
+        self.iteration = 0
+        self.v = {}
+        self.s = {}
+        self.v_corrected = {}
+        self.s_corrected = {}
+
+        for key, param in params.items():
+            self.v[key] = np.zeros_like(param)
+            self.s[key] = np.zeros_like(param)
+            self.v_corrected[key] = np.zeros_like(param)
+            self.s_corrected[key] = np.zeros_like(param)
+
+        self.ETA = ETA
+        self.BETA1 = BETA1
+        self.BETA2 = BETA2
+        self.EPSILON = EPSILON
+
+    def update(self, params, grads):
+        c_beta1 = self.BETA1 ** (self.iteration + 1)
+        c_beta2 = self.BETA2 ** (self.iteration + 1)
+        self.iteration += 1
+
+        for key in self.v.keys():
+            self.v[key] = self.BETA1 * self.v[key] + (1 - self.BETA1) * grads[key]
+            self.v_corrected[key] = self.v[key] / (1 - c_beta1)
+
+        for key in self.s.keys():
+            self.s[key] = self.BETA2 * self.s[key] + (1 - self.BETA2) * (grads[key] ** 2)
+            self.s_corrected[key] = self.s[key] / (1 - c_beta2)
+
+        for key in params.keys():
+            params[key] -= self.ETA * self.v_corrected[key] / np.sqrt(self.s_corrected[key] + self.EPSILON)
+
 
 class DeepConvNet:
     def __init__(self):
-        self.params = None
+        self.params = {}
         self.layers = None
 
         self.init_params()
         self.init_layers()
 
+        self.optimizer = AdamOptimizer(self.params, 0.001)
+
     def init_params(self):
-        SMALL_POSITIVE = 0.01
-
         self.params = {}
-        self.params['W1'] = np.random.randn(3, 3, 1, 16) * np.sqrt(2. / (28*28))
-        self.params['b1'] = np.ones(16) * SMALL_POSITIVE
-        self.params['W2'] = np.random.randn(3, 3, 16, 16) * np.sqrt(2. / (3*3*1))
-        self.params['b2'] = np.ones(16) * SMALL_POSITIVE
+        self.params['W1'] = np.random.randn(3, 3, 1, 16) * he(28*28)
+        self.params['b1'] = np.zeros(16)
+        self.params['W2'] = np.random.randn(3, 3, 16, 16) * he(3*3*1)
+        self.params['b2'] = np.zeros(16)
 
-        self.params['W3'] = np.random.randn(3, 3, 16, 32) * np.sqrt(2. / (3*3*16))
-        self.params['b3'] = np.ones(32) * SMALL_POSITIVE
-        self.params['W4'] = np.random.randn(3, 3, 32, 32) * np.sqrt(2. / (3*3*16))
-        self.params['b4'] = np.ones(32) * SMALL_POSITIVE
+        self.params['W3'] = np.random.randn(3, 3, 16, 32) * he(3*3*16)
+        self.params['b3'] = np.zeros(32)
+        self.params['W4'] = np.random.randn(3, 3, 32, 32) * he(3*3*16)
+        self.params['b4'] = np.zeros(32)
 
-        self.params['W5'] = np.random.randn(7*7*32, 256) * np.sqrt(2. / (7*7*32))
-        self.params['b5'] = np.ones(256) * SMALL_POSITIVE
-        self.params['W6'] = np.random.randn(256, 256) * np.sqrt(2. / 256)
-        self.params['b6'] = np.ones(256) * SMALL_POSITIVE
-        self.params['W7'] = np.random.randn(256, 10) * np.sqrt(2. / 256)
-        self.params['b7'] = np.ones(10) * SMALL_POSITIVE
+        self.params['W5'] = np.random.randn(7*7*32, 256) * he(7*7*32)
+        self.params['b5'] = np.zeros(256)
+        self.params['W6'] = np.random.randn(256, 256) * he(256)
+        self.params['b6'] = np.zeros(256)
+        self.params['W7'] = np.random.randn(256, 10) * he(256)
+        self.params['b7'] = np.zeros(10)
 
     def init_layers(self):
         self.layers = OrderedDict()
@@ -88,10 +126,8 @@ class DeepConvNet:
         return np.mean(Z_index == T_index)
 
     def gradient_descent(self, X, T):
-        ETA = 0.0001
-        grads = net.gradients(X, T)
-        for param_name in list(self.params.keys()):
-            self.params[param_name] -= ETA * grads[param_name]
+        grads = self.gradients(X, T)
+        self.optimizer.update(self.params, grads)
 
     def gradients(self, X, T):
         self.loss(X, T)
@@ -141,13 +177,10 @@ class DeepConvNet:
             original = itr[0].copy()
 
             itr[0] = original + h
-            # print("original + h: {}".format(itr[0]))
             v1 = loss()
             itr[0] = original - h
-            # print("original - h: {}".format(itr[0]))
             v2 = loss()
             gradients[itr.multi_index] = (v1 - v2) / (2 * h)
-            # print("grad: {}".format(gradients[itr.multi_index]))
 
             itr[0] = original
             itr.iternext()
@@ -203,49 +236,19 @@ if __name__ == '__main__':
     itr = 0
     for epoch in range(epochs):
         print("========== Epoch {} ==========".format(epoch))
-
         for _ in range(iteration_per_epoch):
-            batch_mask = np.random.choice(train_size, batch_size)
-            batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
-            batch_labels = train_labels[batch_mask]
-
             if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
-            if itr != 0 and itr % 20 == 0:
-                train_loss = net.loss(batch_images, batch_labels)
-                # test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
-                test_loss = 0
-                print("Losses in Iteration {}: train: {}, test: {}".format(itr, train_loss, test_loss))
-                log['loss_train'].append(train_loss)
-                log['loss_train_itr'].append(itr)
-                log['loss_test'].append(test_loss)
-                log['loss_test_itr'].append(itr)
-
-            if itr != 0 and itr % 300 == 0:
-                train_acc = net.accuracy(batch_images, batch_labels)
-                test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
-                print("Accuracy in Iteration {}: train: {}, test: {}".format(itr, train_acc, test_acc))
-                log['accuracy_train'].append(train_acc)
-                log['accuracy_train_itr'].append(itr)
-                log['accuracy_test'].append(test_acc)
-                log['accuracy_test_itr'].append(itr)
-
-            # if itr % 100 == 0:
-            #     pickle_filename = "params_epoch_{}_itr_{}.pkl".format(epoch, itr)
-            #     fast_basic_net.save_params(pickle_filename)
-
+            batch_mask = np.random.choice(train_size, batch_size)
+            batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+            batch_labels = train_labels[batch_mask]
             net.gradient_descent(batch_images, batch_labels)
+
 
             itr += 1
 
     print("Done training!")
-
-    # ==== End Training
-    #
-    # # print(log)
-    # pickle.dump(log, open('log.pkl', "wb"))
-    #
 
     print("Calculating losses...")
     train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
