@@ -3,7 +3,7 @@ sys.path.append(path.abspath(path.join(__file__ ,"../../../..")))
 import numpy as np
 import pickle
 from lib.MNIST import MNIST
-from lib.layers import DenseLayer, BatchNormLayer, ReluLayer, SoftmaxCrossEntropyLayer
+from lib.layers import DenseLayer, BatchNormLayer, ReluLayer, SoftmaxCrossEntropyLayer, SigmoidLayer
 from collections import OrderedDict
 
 def he(n_in):
@@ -41,18 +41,18 @@ class SevenLayerNet:
         self.layers = OrderedDict()
         self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
         self.layers['BatchNorm1'] = BatchNormLayer(self.params['gamma1'], self.params['beta1'])
-        self.layers['Relu1'] = ReluLayer()
+        self.layers['Relu1'] = SigmoidLayer()
 
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
-        self.layers['Relu2'] = ReluLayer()
+        self.layers['Relu2'] = SigmoidLayer()
         self.layers['Dense3'] = DenseLayer(self.params['W3'], self.params['b3'])
-        self.layers['Relu3'] = ReluLayer()
+        self.layers['Relu3'] = SigmoidLayer()
         self.layers['Dense4'] = DenseLayer(self.params['W4'], self.params['b4'])
-        self.layers['Relu4'] = ReluLayer()
+        self.layers['Relu4'] = SigmoidLayer()
         self.layers['Dense5'] = DenseLayer(self.params['W5'], self.params['b5'])
-        self.layers['Relu5'] = ReluLayer()
+        self.layers['Relu5'] = SigmoidLayer()
         self.layers['Dense6'] = DenseLayer(self.params['W6'], self.params['b6'])
-        self.layers['Relu6'] = ReluLayer()
+        self.layers['Relu6'] = SigmoidLayer()
         self.layers['Dense7'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -125,6 +125,7 @@ class SevenLayerNet:
 
         gradients = {}
         for param_name in list(self.params.keys()):
+            print("calculating: ", param_name)
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
         return gradients
@@ -191,7 +192,7 @@ if __name__ == '__main__':
         'accuracy_test_itr': []
     }
     
-    epochs = 5
+    epochs = 1
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
@@ -226,6 +227,8 @@ if __name__ == '__main__':
         seven_layer_net.is_training = False
 
     print("Done!")
+
+    seven_layer_net.gradient_check(train_images[:50, :], train_labels[:50])
 
     train_acc = seven_layer_net.accuracy(train_images, train_labels)
     test_acc = seven_layer_net.accuracy(test_images, test_labels)
