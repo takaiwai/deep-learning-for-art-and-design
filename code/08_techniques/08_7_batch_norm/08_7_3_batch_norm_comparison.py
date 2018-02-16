@@ -44,18 +44,6 @@ class BatchNormNet:
             self.params['gamma4'] = np.ones(30)
             self.params['beta4'] = np.zeros(30)
         
-        self.params['W5'] = np.random.randn(30, 30) * self.weight_stddev
-        self.params['b5'] = np.zeros(30)
-        if self.uses_batch_norm:
-            self.params['gamma5'] = np.ones(30)
-            self.params['beta5'] = np.zeros(30)
-        
-        self.params['W6'] = np.random.randn(30, 30) * self.weight_stddev
-        self.params['b6'] = np.zeros(30)
-        if self.uses_batch_norm:
-            self.params['gamma6'] = np.ones(30)
-            self.params['beta6'] = np.zeros(30)
-        
         self.params['W7'] = np.random.randn(30, 10) * self.weight_stddev
         self.params['b7'] = np.zeros(10)
 
@@ -80,16 +68,6 @@ class BatchNormNet:
         if self.uses_batch_norm:
             self.layers['BatchNorm4'] = BatchNormLayer(self.params['gamma4'], self.params['beta4'])
         self.layers['Relu4'] = ReluLayer()
-        
-        self.layers['Dense5'] = DenseLayer(self.params['W5'], self.params['b5'])
-        if self.uses_batch_norm:
-            self.layers['BatchNorm5'] = BatchNormLayer(self.params['gamma5'], self.params['beta5'])
-        self.layers['Relu5'] = ReluLayer()
-        
-        self.layers['Dense6'] = DenseLayer(self.params['W6'], self.params['b6'])
-        if self.uses_batch_norm:
-            self.layers['BatchNorm6'] = BatchNormLayer(self.params['gamma6'], self.params['beta6'])
-        self.layers['Relu6'] = ReluLayer()
         
         self.layers['Dense7'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.last_layer = SoftmaxCrossEntropyLayer()
@@ -145,10 +123,6 @@ class BatchNormNet:
         gradients['b3'] = self.layers['Dense3'].db
         gradients['W4'] = self.layers['Dense4'].dW
         gradients['b4'] = self.layers['Dense4'].db
-        gradients['W5'] = self.layers['Dense5'].dW
-        gradients['b5'] = self.layers['Dense5'].db
-        gradients['W6'] = self.layers['Dense6'].dW
-        gradients['b6'] = self.layers['Dense6'].db
         gradients['W7'] = self.layers['Dense7'].dW
         gradients['b7'] = self.layers['Dense7'].db
 
@@ -161,10 +135,6 @@ class BatchNormNet:
             gradients['beta3'] = self.layers['BatchNorm3'].dbeta
             gradients['gamma4'] = self.layers['BatchNorm4'].dgamma
             gradients['beta4'] = self.layers['BatchNorm4'].dbeta
-            gradients['gamma5'] = self.layers['BatchNorm5'].dgamma
-            gradients['beta5'] = self.layers['BatchNorm5'].dbeta
-            gradients['gamma6'] = self.layers['BatchNorm6'].dgamma
-            gradients['beta6'] = self.layers['BatchNorm6'].dbeta
 
         return gradients
 
