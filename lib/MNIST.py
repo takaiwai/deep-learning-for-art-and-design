@@ -20,6 +20,9 @@ class MNIST:
 
         self.dataset = None
 
+        if not os.path.exists(MNIST.TMP_DIR):
+            os.makedirs(MNIST.TMP_DIR)
+
         if os.path.exists(self.PICKLE_PATH):
             self.load_pickle()
         else:
@@ -54,8 +57,6 @@ class MNIST:
             'test_images': self.load_images(self.FILE_NAMES[2]),
             'test_labels': self.load_labels(self.FILE_NAMES[3]),
         }
-        if not os.path.exists(MNIST.TMP_DIR):
-            os.makedirs(MNIST.TMP_DIR)
         pickle.dump(self.dataset, open(self.PICKLE_PATH, "wb"))
 
         print("Created MNIST pickle at {}".format(self.PICKLE_PATH))
