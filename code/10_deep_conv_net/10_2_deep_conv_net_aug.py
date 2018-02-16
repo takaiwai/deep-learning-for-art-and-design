@@ -252,8 +252,8 @@ if __name__ == '__main__':
     print("len_arg: ", len_arg)
 
     index = 0
-    if len_arg == 1:
-        index = int(sys.argv[0])
+    if len_arg == 2:
+        index = int(sys.argv[1])
     print("index: ", index)
 
     net = DeepConvNet()
