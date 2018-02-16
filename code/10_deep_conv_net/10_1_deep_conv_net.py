@@ -60,17 +60,17 @@ class DeepConvNet:
 
     def init_params(self):
         self.params = {}
-        self.params['W1'] = np.random.randn(3, 3, 1, 16) * he(28*28)
-        self.params['b1'] = np.zeros(16)
-        self.params['W2'] = np.random.randn(3, 3, 16, 16) * he(3*3*1)
-        self.params['b2'] = np.zeros(16)
+        self.params['W1'] = np.random.randn(3, 3, 1, 32) * he(28*28)
+        self.params['b1'] = np.zeros(32)
+        self.params['W2'] = np.random.randn(3, 3, 32, 32) * he(3*3*1)
+        self.params['b2'] = np.zeros(32)
 
-        self.params['W3'] = np.random.randn(3, 3, 16, 32) * he(3*3*16)
-        self.params['b3'] = np.zeros(32)
-        self.params['W4'] = np.random.randn(3, 3, 32, 32) * he(3*3*16)
-        self.params['b4'] = np.zeros(32)
+        self.params['W3'] = np.random.randn(3, 3, 32, 64) * he(3*3*32)
+        self.params['b3'] = np.zeros(64)
+        self.params['W4'] = np.random.randn(3, 3, 64, 64) * he(3*3*64)
+        self.params['b4'] = np.zeros(64)
 
-        self.params['W5'] = np.random.randn(7*7*32, 256) * he(7*7*32)
+        self.params['W5'] = np.random.randn(7*7*64, 256) * he(7*7*64)
         self.params['b5'] = np.zeros(256)
         self.params['gamma1'] = np.ones(256)
         self.params['beta1'] = np.zeros(256)
@@ -284,7 +284,7 @@ if __name__ == '__main__':
     log['train_acc'] = train_acc
     log['test_acc'] = test_acc
 
-    # pickle.dump(log, open(path.join(path.dirname(__file__ ), 'solo_{}_log.pkl'.format(i)), "wb"))
-    #
-    # net.save_params('solo_{}_params.pkl'.format(i))
+    i = 0
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_solo_{}_log.pkl'.format(i)), "wb"))
+    net.save_params('deep_conv_solo_{}_params.pkl'.format(i))
 
