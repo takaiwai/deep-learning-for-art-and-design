@@ -79,6 +79,22 @@ class ReluLayer:
 
         return dX
 
+class DropoutLayer:
+    def __init__(self, num_neurons, keep_prob=0.8):
+        self.num_neurons = num_neurons
+        self.keep_prob = keep_prob
+        self.mask = None
+
+    def forward(self, X, is_training=False):
+        if is_training:
+            self.mask = np.random.rand(X.shape[0], self.num_neurons) < self.keep_prob
+            return X * self.mask / self.keep_prob
+        else:
+            return X
+
+    def backward(self, dY):
+        return dY * self.mask / self.keep_prob
+
 class SoftmaxCrossEntropyLayer():
     def __init__(self):
         self.Y = None

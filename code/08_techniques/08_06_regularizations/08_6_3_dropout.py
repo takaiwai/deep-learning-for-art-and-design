@@ -3,7 +3,7 @@ sys.path.append(path.abspath(path.join(__file__ ,"../../../..")))
 import numpy as np
 import pickle
 from lib.MNIST import MNIST
-from lib.layers import DenseLayer, ReluLayer, SoftmaxCrossEntropyLayer
+from lib.layers import DenseLayer, ReluLayer, SoftmaxCrossEntropyLayer, DropoutLayer
 from collections import OrderedDict
 
 def he(n_in):
@@ -45,8 +45,7 @@ class AdamOptimizer:
             params[key] -= self.ETA * self.v_corrected[key] / np.sqrt(self.s_corrected[key] + self.EPSILON)
 
 
-
-class L2RegularizationNet:
+class DropOutNet:
     def __init__(self):
         self.params = {}
         self.layers = None
@@ -56,7 +55,7 @@ class L2RegularizationNet:
 
         self.optimizer = AdamOptimizer(self.params, 0.001)
 
-        self.l2_lambda = 0.1
+        self.is_training = False
 
     def init_params(self):
         self.params['W1'] = np.random.randn(28*28, 500) * he(28*28)
@@ -84,22 +83,40 @@ class L2RegularizationNet:
         self.layers = OrderedDict()
         self.layers['Dense1'] = DenseLayer(self.params['W1'], self.params['b1'])
         self.layers['Relu1'] = ReluLayer()
+        self.layers['Dropout1'] = DropoutLayer(num_neurons=500, keep_prob=0.7)
+
         self.layers['Dense2'] = DenseLayer(self.params['W2'], self.params['b2'])
         self.layers['Relu2'] = ReluLayer()
+        self.layers['Dropout2'] = DropoutLayer(num_neurons=400, keep_prob=0.7)
+
         self.layers['Dense3'] = DenseLayer(self.params['W3'], self.params['b3'])
         self.layers['Relu3'] = ReluLayer()
+        self.layers['Dropout3'] = DropoutLayer(num_neurons=300, keep_prob=0.6)
+
         self.layers['Dense4'] = DenseLayer(self.params['W4'], self.params['b4'])
         self.layers['Relu4'] = ReluLayer()
+        self.layers['Dropout4'] = DropoutLayer(num_neurons=300, keep_prob=0.6)
+
         self.layers['Dense5'] = DenseLayer(self.params['W5'], self.params['b5'])
         self.layers['Relu5'] = ReluLayer()
+        self.layers['Dropout5'] = DropoutLayer(num_neurons=300, keep_prob=0.6)
+
         self.layers['Dense6'] = DenseLayer(self.params['W6'], self.params['b6'])
         self.layers['Relu6'] = ReluLayer()
+        self.layers['Dropout6'] = DropoutLayer(num_neurons=300, keep_prob=0.6)
+
         self.layers['Dense7'] = DenseLayer(self.params['W7'], self.params['b7'])
         self.layers['Relu7'] = ReluLayer()
+        self.layers['Dropout7'] = DropoutLayer(num_neurons=300, keep_prob=0.5)
+
         self.layers['Dense8'] = DenseLayer(self.params['W8'], self.params['b8'])
         self.layers['Relu8'] = ReluLayer()
+        self.layers['Dropout8'] = DropoutLayer(num_neurons=300, keep_prob=0.5)
+
         self.layers['Dense9'] = DenseLayer(self.params['W9'], self.params['b9'])
         self.layers['Relu9'] = ReluLayer()
+        self.layers['Dropout9'] = DropoutLayer(num_neurons=300, keep_prob=0.5)
+
         self.layers['Dense10'] = DenseLayer(self.params['W10'], self.params['b10'])
         self.last_layer = SoftmaxCrossEntropyLayer()
 
@@ -115,21 +132,18 @@ class L2RegularizationNet:
 
     def predict(self, X):
         out = X
-        for layer in self.layers.values():
-            out = layer.forward(out)
+        for name, layer in self.layers.items():
+            if name.startswith('Dropout'):
+                out = layer.forward(out, is_training=self.is_training)
+            else:
+                out = layer.forward(out)
+
         return out
 
     def loss(self, X, T):
         Z = self.predict(X)
         loss = self.last_layer.forward(Z, T)
-
-        regularization_loss = 0.0
-        for i in range(10):
-            weight_name = 'W{}'.format(i+1)
-            W = self.params[weight_name]
-            regularization_loss += 0.5 * self.l2_lambda * np.sum(W ** 2)
-
-        return loss + regularization_loss
+        return loss
 
     def accuracy(self, X, T):
         Z = self.predict(X)
@@ -151,9 +165,26 @@ class L2RegularizationNet:
             dL = layer.backward(dL)
 
         gradients = {}
-        for i in range(1, 11):
-            gradients['W' + str(i)] = self.layers['Dense' + str(i)].dW + self.l2_lambda * self.layers['Dense' + str(i)].W
-            gradients['b' + str(i)] = self.layers['Dense' + str(i)].db
+        gradients['W1'] = self.layers['Dense1'].dW
+        gradients['b1'] = self.layers['Dense1'].db
+        gradients['W2'] = self.layers['Dense2'].dW
+        gradients['b2'] = self.layers['Dense2'].db
+        gradients['W3'] = self.layers['Dense3'].dW
+        gradients['b3'] = self.layers['Dense3'].db
+        gradients['W4'] = self.layers['Dense4'].dW
+        gradients['b4'] = self.layers['Dense4'].db
+        gradients['W5'] = self.layers['Dense5'].dW
+        gradients['b5'] = self.layers['Dense5'].db
+        gradients['W6'] = self.layers['Dense6'].dW
+        gradients['b6'] = self.layers['Dense6'].db
+        gradients['W7'] = self.layers['Dense7'].dW
+        gradients['b7'] = self.layers['Dense7'].db
+        gradients['W8'] = self.layers['Dense8'].dW
+        gradients['b8'] = self.layers['Dense8'].db
+        gradients['W9'] = self.layers['Dense9'].dW
+        gradients['b9'] = self.layers['Dense9'].db
+        gradients['W10'] = self.layers['Dense10'].dW
+        gradients['b10'] = self.layers['Dense10'].db
 
         return gradients
 
@@ -162,7 +193,6 @@ class L2RegularizationNet:
 
         gradients = {}
         for param_name in list(self.params.keys()):
-            print("calculating: ", param_name)
             gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
 
         return gradients
@@ -212,7 +242,8 @@ if __name__ == '__main__':
 
     np.random.seed(1229)
 
-    fast_basic_net = L2RegularizationNet()
+    fast_basic_net = DropOutNet()
+    # fast_basic_net.load_params('params_after_5_epochs.pkl')
 
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset()
@@ -232,13 +263,14 @@ if __name__ == '__main__':
         'accuracy_test_itr': []
     }
     
-    epochs = 50
+    epochs = 75
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
     total_iterations = iteration_per_epoch * epochs
 
     itr = 0
+
     for epoch in range(epochs):
         print("Epoch: {}".format(epoch))
 
@@ -250,6 +282,7 @@ if __name__ == '__main__':
         log['accuracy_test_itr'].append(itr)
         print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
+        fast_basic_net.is_training = True
         for _ in range(iteration_per_epoch):
             batch_mask = np.random.choice(train_size, batch_size)
             batch_images = train_images[batch_mask]
@@ -257,8 +290,7 @@ if __name__ == '__main__':
 
             fast_basic_net.gradient_descent(batch_images, batch_labels)
             itr += 1
-
-    # fast_basic_net.gradient_check(train_images[:1, :], train_labels[:1])
+        fast_basic_net.is_training = False
 
     print("Done!")
 
@@ -270,4 +302,4 @@ if __name__ == '__main__':
     log['accuracy_test_itr'].append(itr)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
 
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), '08_6_2_l2_regularization_log.pkl'), "wb"))
+    pickle.dump(log, open(path.join(path.dirname(__file__ ), '08_6_3_dropout_log.pkl'), "wb"))

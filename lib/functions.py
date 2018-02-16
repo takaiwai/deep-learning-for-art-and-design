@@ -14,7 +14,8 @@ def softmax(X):
         return exp / sum
 
 def cross_entropy(Y, T):
-    return np.mean(np.sum(-np.log(Y) * T, axis=1))
+    EPSION = 1e-8
+    return np.mean(np.sum(-np.log(Y+EPSION) * T, axis=1))
 
 
 if __name__ == '__main__':
