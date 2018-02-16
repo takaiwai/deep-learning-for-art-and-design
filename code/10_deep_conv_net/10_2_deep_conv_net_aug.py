@@ -267,7 +267,7 @@ if __name__ == '__main__':
     mnist = MNIST()
     train_images, train_labels, test_images, test_labels = mnist.get_dataset(normalize=False, for_conv_net=True)
 
-    epochs = 1
+    epochs = 30
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
