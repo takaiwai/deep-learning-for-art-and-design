@@ -1,5 +1,5 @@
-import sys, os
-sys.path.append(os.pardir)
+import sys, os.path as path
+sys.path.append(path.abspath(path.join(__file__ ,"../../../")))
 import numpy as np
 import datetime
 import pickle
@@ -213,50 +213,54 @@ if __name__ == '__main__':
     net = DeepConvNet()
 
     mnist = MNIST()
-    train_images, train_labels, test_images, test_labels = mnist.get_dataset()
+    train_images, train_labels, test_images, test_labels = mnist.get_dataset(normalize=True, for_conv_net=True)
 
-    log = {
-        'loss_train': [],
-        'loss_train_itr': [],
-        'loss_test': [],
-        'loss_test_itr': [],
-        'accuracy_train': [],
-        'accuracy_train_itr': [],
-        'accuracy_test': [],
-        'accuracy_test_itr': [],
-    }
-    
     epochs = 1
     train_size = train_images.shape[0]
     batch_size = 100
     iteration_per_epoch = train_size // batch_size
     total_iterations = iteration_per_epoch * epochs
 
+    log = {
+        'train_acc': 0,
+        'test_acc': 0,
+        'iterations': [],
+        'accuracy': []
+    }
 
     itr = 0
     for epoch in range(epochs):
         print("========== Epoch {} ==========".format(epoch))
+
         for _ in range(iteration_per_epoch):
             if itr % 5 == 0:
                 print("Iteration {}/{}: {}".format(itr, total_iterations, datetime.datetime.now()))
 
+            if itr % 200 == 0:
+                print("[Test Accuracy] Calculating...")
+                test_acc = net.accuracy(test_images, test_labels)
+                log['iterations'].append(itr)
+                log['accuracy'].append(test_acc)
+                print("[Test Accuracy] test: {}".format(test_acc))
+
             batch_mask = np.random.choice(train_size, batch_size)
-            batch_images = train_images[batch_mask].reshape(100, 28, 28, 1)
+            batch_images = train_images[batch_mask]
             batch_labels = train_labels[batch_mask]
             net.gradient_descent(batch_images, batch_labels)
 
-
             itr += 1
 
-    print("Done training!")
 
-    print("Calculating losses...")
-    train_loss = net.loss(train_images.reshape(-1, 28, 28, 1), train_labels)
-    test_loss = net.loss(test_images.reshape(-1, 28, 28, 1), test_labels)
-    print("[Losses] train: {}, test: {}".format(train_loss, test_loss))
+    print("Done!")
 
-    print("Calculating accuracy...")
-    train_acc = net.accuracy(train_images.reshape(-1, 28, 28, 1), train_labels)
-    test_acc = net.accuracy(test_images.reshape(-1, 28, 28, 1), test_labels)
+    train_acc = net.accuracy(train_images, train_labels)
+    test_acc = net.accuracy(test_images, test_labels)
     print("[Accuracy] train: {}, test: {}".format(train_acc, test_acc))
+
+    log['train_acc'] = train_acc
+    log['test_acc'] = test_acc
+
+    # pickle.dump(log, open(path.join(path.dirname(__file__ ), 'solo_{}_log.pkl'.format(i)), "wb"))
+    #
+    # net.save_params('solo_{}_params.pkl'.format(i))
 

@@ -38,8 +38,8 @@ class MNIST:
             test_images /= 255.0
 
         if for_conv_net:
-            train_images = train_images.reshape(-1, 1, 28, 28)
-            test_images = test_images.reshape(-1, 1, 28, 28)
+            train_images = train_images.reshape(-1, 28, 28, 1)
+            test_images = test_images.reshape(-1, 28, 28, 1)
 
         return train_images, train_labels, test_images, test_labels
 
