@@ -95,6 +95,67 @@ class DropoutLayer:
     def backward(self, dY):
         return dY * self.mask / self.keep_prob
 
+class BatchNormLayer:
+    EPSILON = 1e-8
+    def __init__(self, gamma, beta):
+        self.gamma = gamma
+        self.beta = beta
+
+        self.dgamma = None
+        self.dbeta = None
+
+        self.cache = None
+
+    def forward(self, X):
+        N, D = X.shape
+
+        # if is_training:
+        mu = 1.0 / N * np.sum(X, axis=0)
+        x_mu = X - mu
+        sq = x_mu ** 2
+
+        var = 1.0 / N * np.sum(sq, axis=0)
+        sqrt_var = np.sqrt(var + BatchNormLayer.EPSILON)
+        inv_var = 1.0 / sqrt_var
+        x_hat = x_mu * inv_var
+        gamma_x = self.gamma * x_hat
+        Y = gamma_x + self.beta
+
+        self.cache = (x_hat, x_mu, inv_var, sqrt_var, var)
+
+        return Y
+
+    def backward(self, dY):
+        x_hat, x_mu, inv_var, sqrt_var, var = self.cache
+
+        N, D = dY.shape
+
+        self.dbeta = np.sum(dY, axis=0)
+        dgammax = dY
+
+        self.dgamma = np.sum(dgammax * x_hat, axis=0)
+        dx_hat = dgammax * self.gamma
+
+        dinv_var = np.sum(dx_hat * x_mu, axis=0)
+        dx_mu1 = dx_hat * inv_var
+
+        dsqrt_var = -1.0 / (sqrt_var ** 2) * dinv_var
+
+        dvar = 0.5 / np.sqrt(var + BatchNormLayer.EPSILON) * dsqrt_var
+
+        dsq = 1.0 / N * np.ones((N, D)) * dvar
+
+        dxmu2 = 2 * x_mu * dsq
+
+        dx1 = (dx_mu1 + dxmu2)
+        dmu = -1 * np.sum(dx_mu1+dxmu2, axis=0)
+
+        dx2 = -1 / N * np.ones((N, D)) * dmu
+
+        dx = dx1 + dx2
+
+        return dx
+
 class SoftmaxCrossEntropyLayer():
     def __init__(self):
         self.Y = None
