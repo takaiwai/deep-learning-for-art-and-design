@@ -234,6 +234,30 @@ if __name__ == '__main__':
     image = Image.fromarray(data, 'L')
     image.show()
 
+    data = train_images[5].reshape(28, 28).astype(np.uint8)
+    image = Image.fromarray(data, 'L').rotate(15, resample=Image.BICUBIC)
+    image.show()
+
+    data = train_images[5].reshape(28, 28).astype(np.uint8)
+    image = Image.fromarray(data, 'L').rotate(-15, resample=Image.BICUBIC)
+    image.show()
+
+    data = train_images[5].reshape(28, 28).astype(np.uint8)
+    matrix = [
+        1, 0, 4,
+        0, 1, 4,
+        0, 0]
+    image = Image.fromarray(data, 'L').transform((28, 28), Image.AFFINE, matrix, resample=Image.BICUBIC)
+    image.show()
+
+    data = train_images[5].reshape(28, 28).astype(np.uint8)
+    matrix = [
+        1, 0, -4,
+        0, 1, -4,
+        0, 0]
+    image = Image.fromarray(data, 'L').transform((28, 28), Image.AFFINE, matrix, resample=Image.BICUBIC)
+    image.show()
+
     print("train_images, train_labels: ", train_images.shape, train_labels.shape)
 
     exit(0)
