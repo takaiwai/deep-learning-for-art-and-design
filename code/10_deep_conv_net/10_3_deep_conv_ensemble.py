@@ -12,41 +12,6 @@ from PIL import Image
 def he(n_in):
     return np.sqrt(2 / n_in)
 
-class AdamOptimizer:
-    def __init__(self, params, ETA=0.001, BETA1 = 0.9, BETA2 = 0.999, EPSILON = 1e-8):
-        self.iteration = 0
-        self.v = {}
-        self.s = {}
-        self.v_corrected = {}
-        self.s_corrected = {}
-
-        for key, param in params.items():
-            self.v[key] = np.zeros_like(param)
-            self.s[key] = np.zeros_like(param)
-            self.v_corrected[key] = np.zeros_like(param)
-            self.s_corrected[key] = np.zeros_like(param)
-
-        self.ETA = ETA
-        self.BETA1 = BETA1
-        self.BETA2 = BETA2
-        self.EPSILON = EPSILON
-
-    def update(self, params, grads):
-        c_beta1 = self.BETA1 ** (self.iteration + 1)
-        c_beta2 = self.BETA2 ** (self.iteration + 1)
-        self.iteration += 1
-
-        for key in self.v.keys():
-            self.v[key] = self.BETA1 * self.v[key] + (1 - self.BETA1) * grads[key]
-            self.v_corrected[key] = self.v[key] / (1 - c_beta1)
-
-        for key in self.s.keys():
-            self.s[key] = self.BETA2 * self.s[key] + (1 - self.BETA2) * (grads[key] ** 2)
-            self.s_corrected[key] = self.s[key] / (1 - c_beta2)
-
-        for key in params.keys():
-            params[key] -= self.ETA * self.v_corrected[key] / np.sqrt(self.s_corrected[key] + self.EPSILON)
-
 
 class DeepConvNet:
     def __init__(self):
@@ -56,7 +21,6 @@ class DeepConvNet:
         self.init_params()
         self.init_layers()
 
-        self.optimizer = AdamOptimizer(self.params, 0.001)
         self.is_training = False
 
     def init_params(self):
@@ -131,112 +95,6 @@ class DeepConvNet:
                 out = layer.forward(out)
 
         return out
-
-    def loss(self, X, T):
-        Z = self.predict(X)
-        loss = self.last_layer.forward(Z, T)
-        return loss
-
-    def accuracy(self, X, T):
-        Z = self.predict(X)
-        Z_index = np.argmax(Z, axis=1)
-        T_index = np.argmax(T, axis=1)
-        return np.mean(Z_index == T_index)
-
-    def accuracy_count(self, X, T):
-        Z = self.predict(X)
-        Z_index = np.argmax(Z, axis=1)
-        T_index = np.argmax(T, axis=1)
-        return np.sum(Z_index == T_index)
-
-    def gradient_descent(self, X, T):
-        grads = self.gradients(X, T)
-        self.optimizer.update(self.params, grads)
-
-    def gradients(self, X, T):
-        self.loss(X, T)
-
-        dL = self.last_layer.backward()
-        layers = list(self.layers.values())
-        layers.reverse()
-        for layer in layers:
-            dL = layer.backward(dL)
-
-        gradients = {}
-        gradients['W1'] = self.layers['Convolution1'].dW
-        gradients['b1'] = self.layers['Convolution1'].db
-        gradients['W2'] = self.layers['Convolution2'].dW
-        gradients['b2'] = self.layers['Convolution2'].db
-
-        gradients['W3'] = self.layers['Convolution3'].dW
-        gradients['b3'] = self.layers['Convolution3'].db
-        gradients['W4'] = self.layers['Convolution4'].dW
-        gradients['b4'] = self.layers['Convolution4'].db
-
-        gradients['W5'] = self.layers['Dense1'].dW
-        gradients['b5'] = self.layers['Dense1'].db
-        gradients['W6'] = self.layers['Dense2'].dW
-        gradients['b6'] = self.layers['Dense2'].db
-        gradients['W7'] = self.layers['Dense3'].dW
-        gradients['b7'] = self.layers['Dense3'].db
-
-        gradients['gamma1'] = self.layers['BatchNorm1'].dgamma
-        gradients['beta1'] = self.layers['BatchNorm1'].dbeta
-        gradients['gamma2'] = self.layers['BatchNorm2'].dgamma
-        gradients['beta2'] = self.layers['BatchNorm2'].dbeta
-
-        return gradients
-
-    def numerical_gradients(self, X, T):
-        loss = lambda: self.loss(X, T)
-
-        gradients = {}
-        for param_name in list(self.params.keys()):
-            print("Calculating numerical gradient with respect to: ", param_name)
-            gradients[param_name] = self.numerical_gradient(loss, self.params[param_name])
-
-        return gradients
-
-    def numerical_gradient(self, loss, variables):
-        h = 1e-8
-        gradients = np.zeros_like(variables)
-
-        itr = np.nditer(variables, flags=['multi_index'], op_flags=['readwrite'])
-        while not itr.finished:
-            original = itr[0].copy()
-
-            itr[0] = original + h
-            v1 = loss()
-            itr[0] = original - h
-            v2 = loss()
-            gradients[itr.multi_index] = (v1 - v2) / (2 * h)
-
-            itr[0] = original
-            itr.iternext()
-
-        return gradients
-
-    def gradient_check(self, images, labels):
-        print("Checking gradients...")
-        THRESHOLD = 1e-5
-        backprop_grad = self.gradients(images, labels)
-        numerical_grad = self.numerical_gradients(images, labels)
-
-        for key in backprop_grad.keys():
-            b = backprop_grad[key].reshape(-1)
-            n = numerical_grad[key].reshape(-1)
-
-            diff = np.linalg.norm(b - n)
-            prop = np.linalg.norm(b) + np.linalg.norm(n)
-            check = diff / prop
-            if check < THRESHOLD:
-                result = 'OK'
-            else:
-                result = 'NG'
-
-            print("gradient {}: {} ({}) diff: {}, prop: {}".format(key, result, check, diff, prop))
-
-
 
 
 
