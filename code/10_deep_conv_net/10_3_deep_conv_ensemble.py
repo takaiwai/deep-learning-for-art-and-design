@@ -120,12 +120,12 @@ if __name__ == '__main__':
     batch_size = 100
 
     # Ensemble from 1 to 10
-    for num_nets in range(10):
-        print("============== Ensemble with {} networks".format(num_nets+1))
+    for num_nets in range(1, 11):
+        print("============== Ensemble with {} networks".format(num_nets))
 
         # Load network
         nets = []
-        for i in range(10):
+        for i in range(num_nets):
             net = DeepConvNet()
             param_path = path.join(path.dirname(__file__ ), 'params', 'deep_conv_solo_{}_params.pkl'.format(i))
             net.load_params(param_path)
@@ -151,4 +151,5 @@ if __name__ == '__main__':
         test_acc = correct_prediction / test_images.shape[0]
         print("[Accuracy] test: {}".format(test_acc))
 
+        log['test_acc'] = test_acc
         pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_ensemble_{}_log.pkl'.format(num_nets)), "wb"))
