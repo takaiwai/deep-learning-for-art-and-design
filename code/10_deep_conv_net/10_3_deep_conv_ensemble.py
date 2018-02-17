@@ -119,34 +119,36 @@ if __name__ == '__main__':
     train_images, train_labels, test_images, test_labels = mnist.get_dataset(normalize=True, for_conv_net=True)
     batch_size = 100
 
-    # Load network
-    nets = []
-    for i in range(10):
-        net = DeepConvNet()
-        param_path = path.join(path.dirname(__file__ ), 'params', 'deep_conv_solo_{}_params.pkl'.format(i))
-        net.load_params(param_path)
-        nets.append(net)
+    # Ensemble from 1 to 10
+    for num_nets in range(10):
+        print("============== Ensemble with {} networks".format(num_nets+1))
 
-    log = {
-        'test_acc': 0
-    }
+        # Load network
+        nets = []
+        for i in range(10):
+            net = DeepConvNet()
+            param_path = path.join(path.dirname(__file__ ), 'params', 'deep_conv_solo_{}_params.pkl'.format(i))
+            net.load_params(param_path)
+            nets.append(net)
 
-    # Calculate accuracy
-    correct_prediction = 0
-    for batch in range(test_images.shape[0] // batch_size):
-        index_start = batch * batch_size
-        index_end = (batch+1) * batch_size
-        t_image = test_images[index_start:index_end, :, :, :]
-        t_label = test_labels[index_start:index_end]
+        log = {
+            'test_acc': 0
+        }
 
-        co = ensemble_accuracy_count(t_image, t_label)
-        print("{}-{}: {}/{}".format(index_start, index_end, co, t_image.shape[0]))
+        # Calculate accuracy
+        correct_prediction = 0
+        for batch in range(test_images.shape[0] // batch_size):
+            index_start = batch * batch_size
+            index_end = (batch+1) * batch_size
+            t_image = test_images[index_start:index_end, :, :, :]
+            t_label = test_labels[index_start:index_end]
 
-        correct_prediction += co
-    test_acc = correct_prediction / test_images.shape[0]
+            co = ensemble_accuracy_count(t_image, t_label)
+            print("{}-{}: {}/{}".format(index_start, index_end, co, t_image.shape[0]))
 
-    print("[Accuracy] test: {}".format(test_acc))
+            correct_prediction += co
 
-    num_nets = 10
-    pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_ensemble_{}_log.pkl'.format(num_nets)), "wb"))
+        test_acc = correct_prediction / test_images.shape[0]
+        print("[Accuracy] test: {}".format(test_acc))
 
+        pickle.dump(log, open(path.join(path.dirname(__file__ ), 'deep_conv_ensemble_{}_log.pkl'.format(num_nets)), "wb"))
